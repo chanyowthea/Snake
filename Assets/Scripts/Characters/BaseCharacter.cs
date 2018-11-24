@@ -6,6 +6,7 @@ public class BaseCharacter : MonoBehaviour
 {
     public float MoveSpeed { get; private set; }
     public int CharacterID { get; private set; }
+    public float StrongRatio { get; private set; }
 
     /// <summary>
     /// total body length
@@ -40,19 +41,48 @@ public class BaseCharacter : MonoBehaviour
         }
     }
 
-    // set body in order. 
-    List<Body> _Bodies = new List<Body>();
-    [SerializeField] Body _Head; 
-
-    public virtual void SetData(int characterId)
+    public Body Head
     {
-        CharacterID = characterId;
-        MoveSpeed = 0.2f; 
+        get
+        {
+            return _Head;
+        }
     }
 
-    public virtual void Move(Vector2 pos)
-    {
+    public PlayerData PlayerData_ { private set; get; }
 
+    // set body in order. 
+    List<Body> _Bodies = new List<Body>();
+    [SerializeField] Head _Head;
+    [SerializeField] Body _BodyPrefab;
+
+    public virtual void SetData(PlayerData data, int initBodyLength, float strongRatio = ConstValue._DefaultStrongRatio)
+    {
+        PlayerData_ = data;
+        CharacterID = data._ID;
+        MoveSpeed = 0.2f;
+        StrongRatio = strongRatio;
+        Head.SetColor(PlayerData_._HeadColor);
+        Head.SetData(this, 0, null);
+        for (int i = 0; i < initBodyLength; i++)
+        {
+            AddBody();
+        }
+    }
+
+    public virtual void Move(Vector3 pos)
+    {
+        var moveSuccess = _Head.Move(pos);
+        if (!moveSuccess)
+        {
+            return;
+        }
+
+        for (int i = 0, length = _Bodies.Count; i < length; i++)
+        {
+            var b = _Bodies[i];
+            b.UpdatePos();
+        }
     }
 
     public virtual void Attack(Body body)
@@ -62,11 +92,46 @@ public class BaseCharacter : MonoBehaviour
 
     public virtual void AddBody()
     {
-
+        var body = GameObject.Instantiate(_BodyPrefab);
+        if (_Bodies.Count == 0)
+        {
+            body.transform.position = _Head.transform.position + -_Head.transform.right * body.Size.x;
+        }
+        else
+        {
+            var b = _Bodies[_Bodies.Count - 1];
+            body.transform.position = b.transform.position + -b.transform.right * body.Size.x;
+        }
+        body.SetData(this, _Bodies.Count, _Bodies.Count == 0 ? _Head : _Bodies[_Bodies.Count - 1]);
+        _Bodies.Add(body);
+        body.transform.SetParent(this.transform);
+        UpdateStrongBody();
     }
 
     public virtual void RemoveBody(int index)
     {
+        for (int i = index, length = _Bodies.Count; i < length; i++)
+        {
+            var b = _Bodies[i];
+            GameObject.Destroy(b.gameObject); 
+        }
+        Debug.LogFormat("RemoveBody rangeCount={0}, prev={1}", _Bodies.Count - index, _Bodies.Count); 
+        _Bodies.RemoveRange(index, _Bodies.Count - index);
+        Debug.LogFormat("RemoveBody index={0}, now={1}", index, _Bodies.Count);
+        UpdateStrongBody();
+    }
 
+    void UpdateStrongBody()
+    {
+        for (int i = 0, length = _Bodies.Count; i < length; i++)
+        {
+            var b = _Bodies[i];
+            b.UpdateStrongBody(i < Mathf.RoundToInt(StrongRatio * (length - 1)));
+        }
+    }
+
+    public virtual void Die()
+    {
+        GameObject.Destroy(this.gameObject);
     }
 }

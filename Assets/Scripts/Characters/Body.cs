@@ -4,16 +4,50 @@ using UnityEngine;
 
 public class Body : MonoBehaviour
 {
-    BaseCharacter _ICharacter; 
-    [SerializeField] SpriteRenderer _Sprite;
+    [SerializeField] protected SpriteRenderer _Sprite;
+    [SerializeField] protected BoxCollider2D _Collider; // TODO circle？
+    protected Body _PrevBody;
+    public BaseCharacter _Character { protected set; get; }
 
-    public void SetData(BaseCharacter character)
+    public int Index { protected set; get; }
+    public bool IsStrong { protected set; get; }
+
+    public Vector2 Size
     {
-
+        get
+        {
+            return new Vector2(_Collider.size.x * transform.lossyScale.x, _Collider.size.y * transform.lossyScale.y);
+        }
     }
 
-    public void Move(Vector2 pos)
-        { 
+    public virtual void SetData(BaseCharacter character, int index, Body prev)
+    {
+        _Character = character; 
+        Index = index;
+        _PrevBody = prev;
+    }
+
+    public virtual void UpdatePos()
+    {
+        var tailPos = _PrevBody.transform.position + -_PrevBody.transform.right * _PrevBody.Size.x / 2f;
+        var dir = (tailPos - transform.position).normalized;
+        transform.position = tailPos + -dir * Size.x / 2f;
+        transform.right = dir;
+    }
+
+    private void FixedUpdate()
+    {
         
-        }
+    }
+
+    public virtual void UpdateStrongBody(bool isStrong)
+    {
+        IsStrong = isStrong;
+        _Sprite.color = IsStrong ? _Character.PlayerData_._StrongColor : _Character.PlayerData_._BodyColor;
+    }
+
+    public virtual void SetColor(Color c)
+    {
+        _Sprite.color = c; 
+    }
 }

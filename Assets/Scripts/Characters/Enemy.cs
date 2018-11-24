@@ -4,21 +4,9 @@ using UnityEngine;
 
 public class Enemy : BaseCharacter
 {
-    public int CharacterID
+    public override void Die()
     {
-        get
-        {
-            return 0;
-        }
-    }
-
-    public void Attack(Body body)
-    {
-
-    }
-
-    public void Move(Vector2 pos)
-    {
-
+        base.Die();
+        GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3)); 
     }
 }
