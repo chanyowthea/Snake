@@ -4,7 +4,18 @@ using UnityEngine;
 
 public class BaseCharacter : MonoBehaviour
 {
-    public float MoveSpeed { get; private set; }
+    protected float _MoveSpeed;
+    public virtual float MoveSpeed
+    {
+        get
+        {
+            return _MoveSpeed * Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f));
+        }
+        protected set
+        {
+            _MoveSpeed = value;
+        }
+    }
     public int CharacterID { get; private set; }
     public float StrongRatio { get; private set; }
     public float Scores { get; private set; }
@@ -58,15 +69,29 @@ public class BaseCharacter : MonoBehaviour
 
     public virtual void SetData(PlayerData data, int initBodyLength, float strongRatio = ConstValue._DefaultStrongRatio)
     {
+        if (data == null)
+        {
+            return;
+        }
+
         PlayerData_ = data;
         CharacterID = data._ID;
-        MoveSpeed = 0.2f;
+        MoveSpeed = data._MoveSpeed;
         StrongRatio = strongRatio;
         Head.SetData(this, 0, null);
         for (int i = 0; i < initBodyLength; i++)
         {
             AddBody();
         }
+    }
+
+    float GetMoveSpeedFactor(int x, float y)
+    {
+        if (x <= 0)
+        {
+            return 1;
+        }
+        return -Mathf.Log(y) / x;
     }
 
     public virtual bool Move(Vector3 pos)
@@ -142,7 +167,7 @@ public class BaseCharacter : MonoBehaviour
 
     public virtual void Die()
     {
-        RemoveBody(0); 
+        RemoveBody(0);
         _Head.Break();
         GameObject.Destroy(this.gameObject);
     }

@@ -6,14 +6,11 @@ using UnityEngine;
 // strong body的不能被小的咬断，也不能被大的咬断
 // 小的头可以被咬，咬了就挂了【咬了就会掉血？】
 
-// 两个BUG
-// 碰撞有问题
-// 反复直走会导致缩成一个点
+// -- BUG -- 
 
-// 测试加分是否正确
-// 死亡
-// 增加食物
+
 // 速度要一致
+// AI
 
 public class GameManager : MonoBehaviour
 {

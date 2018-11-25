@@ -35,7 +35,6 @@ public class Head : Body
                     }
                     else
                     {
-                        Debug.Log("body.IsStrong=" + body.IsStrong);
                         if (attackTarget == null)
                         {
                             attackTarget = body;

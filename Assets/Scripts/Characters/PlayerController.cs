@@ -16,7 +16,7 @@ public class PlayerController : BaseCharacter
         //InputManager.instance.onValueChanged -= OnMove;
     }
 
-    public override void SetData(PlayerData data, int initBodyLength, float strongRatio = 0.3333F)
+    public override void SetData(PlayerData data, int initBodyLength, float strongRatio = 0.3333f)
     {
         base.SetData(data, initBodyLength, strongRatio);
 
@@ -34,7 +34,7 @@ public class PlayerController : BaseCharacter
             float v = Input.GetAxisRaw("Vertical");
             if (h != 0 || v != 0)
             {
-                Move(new Vector3(h, v, 0) * MoveSpeed);
+                Move(new Vector3(h, v, 0).normalized * MoveSpeed);
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
@@ -65,7 +65,7 @@ public class PlayerController : BaseCharacter
             float v = Input.GetAxisRaw("Vertical1");
             if (h != 0 || v != 0)
             {
-                Move(new Vector3(h, v, 0) * MoveSpeed);
+                Move(new Vector3(h, v, 0).normalized * MoveSpeed);
             }
         }
     }
@@ -75,7 +75,7 @@ public class PlayerController : BaseCharacter
         Debug.Log(pos);
         if (pos.x != 0 || pos.y != 0)
         {
-            Move(new Vector3(pos.x, pos.y, 0) * MoveSpeed);
+            Move(new Vector3(pos.x, pos.y, 0).normalized * MoveSpeed);
         }
     }
 
