@@ -9,64 +9,98 @@ public class Head : Body
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireCube(lastPos, Size); 
+        Gizmos.DrawWireCube(lastPos, Size);
     }
 
     public bool Move(Vector3 pos)
     {
         Vector3 targetPos = this.transform.position + pos;
-        var collider = Physics2D.OverlapBox(targetPos, Size, 0);
+        var colliders = Physics2D.OverlapBoxAll(targetPos, Size, 0);
         lastPos = targetPos;
         lastSize = Size;
-        if (collider == null)
+
+        bool pass = true;
+        Body attackTarget = null;
+        if (colliders != null)
         {
-            if (collider != null)
+            for (int i = 0, length = colliders.Length; i < length; i++)
             {
-                Debug.Log("c.Name=" + collider.name + ", character=" + (collider.GetComponent<Body>()._Character.name));
-            }
-            this.transform.position += pos;
-            this.transform.right = pos.normalized;
-            return true;
-        }
-        else
-        {
-            var body = collider.GetComponent<Body>();
-            if (body == null)
-            {
-                this.transform.position += pos;
-                this.transform.right = pos.normalized;
-                return true;
-            }
-            else
-            {
-                if (body._Character == this._Character)
-                { 
-                    this.transform.position += pos;
-                    this.transform.right = pos.normalized;
-                    return true;
+                var col = colliders[i];
+                var body = col.GetComponent<Body>();
+                if (body != null)
+                {
+                    if (body._Character == this._Character)
+                    {
+                        //pass = true;
+                    }
+                    else
+                    {
+                        Debug.Log("body.IsStrong=" + body.IsStrong);
+                        if (attackTarget == null)
+                        {
+                            attackTarget = body;
+                        }
+                        // strong is priority
+                        else if ((body.IsStrong && body._Character != null) && !attackTarget.IsStrong)
+                        {
+                            attackTarget = body;
+                        }
+                    }
                 }
+                // cannot pass wall
                 else
                 {
-                    TryAttack(body);
+                    // attack enemy is priority. 
+                    if (attackTarget == null)
+                    {
+                        var food = col.GetComponent<Food>();
+                        if (food != null)
+                        {
+                            pass = TryAttack(food);
+                        }
+                        else
+                        {
+                            pass = false; 
+                        }
+                    }
+                    else
+                    {
+                        pass = false;
+                    }
+                    break;
                 }
             }
         }
-        return false;
+        if (attackTarget != null)
+        {
+            pass = TryAttack(attackTarget);
+        }
+        if (pass)
+        {
+            this.transform.position += pos;
+            this.transform.right = pos.normalized;
+        }
+        return pass;
     }
 
-    void TryAttack(Body body)
+    /// <summary>
+    /// try attack other
+    /// </summary>
+    /// <param name="body"></param>
+    /// <returns> can pass the road? </returns>
+    bool TryAttack(Body body)
     {
         if (body == null)
         {
-            return;
+            return true;
         }
         if (body._Character == this._Character)
         {
-            return;
+            return true;
         }
-        if (body.IsStrong)
+        if (body.IsStrong && body._Character != null)
         {
-            return;
+            return false;
         }
         if (body is Head)
         {
@@ -75,11 +109,67 @@ public class Head : Body
             if (body._Character.TotalLength < this._Character.TotalLength)
             {
                 body._Character.Die();
+                if (body != null)
+                {
+                    Eat(body.GetCollider());
+                }
+                return true;
             }
+            return false;
         }
         else
         {
-            body._Character.RemoveBody(body.Index);
+            if (body._Character == null)
+            {
+                Eat(body.GetCollider());
+            }
+            else
+            {
+                var food = body._Character.GetBody(body.Index);
+                body._Character.RemoveBody(body.Index);
+                if (food != null)
+                {
+                    Eat(food.GetCollider());
+                }
+            }
+            return true;
         }
+    }
+
+    /// <summary>
+    /// try attack food
+    /// </summary>
+    /// <param name="food"></param>
+    /// <returns> can pass the road? </returns>
+    bool TryAttack(Food food)
+    {
+        if (food == null)
+        {
+            return true;
+        }
+        if (food != null)
+        {
+            Eat(food.GetCollider());
+        }
+        return true;
+    }
+
+    void Eat(BoxCollider2D food)
+    {
+        if (food != null)
+        {
+            Debug.Log("Eat food=" + food.size);
+            GameObject.Destroy(food.gameObject);
+            var iScore = food.GetComponent<IScore>();
+            if (iScore != null)
+            {
+                _Character.AddScore(iScore.GetScore());
+            }
+        }
+    }
+
+    public override float GetScore()
+    {
+        return base.GetScore() * 2;
     }
 }

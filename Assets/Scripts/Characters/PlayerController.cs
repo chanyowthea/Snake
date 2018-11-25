@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerController : BaseCharacter
 {
+    [SerializeField] Camera _PlayerCamera;
+
     private void Start()
     {
         //InputManager.instance.onValueChanged += OnMove;
@@ -12,6 +14,16 @@ public class PlayerController : BaseCharacter
     private void OnDestroy()
     {
         //InputManager.instance.onValueChanged -= OnMove;
+    }
+
+    public override void SetData(PlayerData data, int initBodyLength, float strongRatio = 0.3333F)
+    {
+        base.SetData(data, initBodyLength, strongRatio);
+
+        if (CharacterID != 0)
+        {
+            _PlayerCamera.gameObject.SetActive(false);
+        }
     }
 
     void Update()
@@ -23,6 +35,28 @@ public class PlayerController : BaseCharacter
             if (h != 0 || v != 0)
             {
                 Move(new Vector3(h, v, 0) * MoveSpeed);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.LogError("BodyLength=" + BodyLength);
+            }
+            return;
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                Move(new Vector3(1, 0, 0) * MoveSpeed);
+            }
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                Move(new Vector3(-1, 0, 0) * MoveSpeed);
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                Move(new Vector3(0, -1, 0) * MoveSpeed);
+            }
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                Move(new Vector3(0, 1, 0) * MoveSpeed);
             }
         }
         else
@@ -48,6 +82,6 @@ public class PlayerController : BaseCharacter
     public override void Die()
     {
         base.Die();
-        GameManager.instance.RespawnCharacter(0);
+        GameManager.instance.RespawnCharacter(CharacterID);
     }
 }
