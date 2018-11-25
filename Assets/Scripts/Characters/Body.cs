@@ -22,7 +22,7 @@ public class Body : MonoBehaviour
 
     public virtual void SetData(BaseCharacter character, int index, Body prev)
     {
-        _Character = character; 
+        _Character = character;
         Index = index;
         _PrevBody = prev;
     }
@@ -30,14 +30,13 @@ public class Body : MonoBehaviour
     public virtual void UpdatePos()
     {
         var tailPos = _PrevBody.transform.position + -_PrevBody.transform.right * _PrevBody.Size.x / 2f;
+        if (Vector3.Distance(tailPos, transform.position) < Size.x / 2f)
+        {
+            return;
+        }
         var dir = (tailPos - transform.position).normalized;
         transform.position = tailPos + -dir * Size.x / 2f;
         transform.right = dir;
-    }
-
-    private void FixedUpdate()
-    {
-        
     }
 
     public virtual void UpdateStrongBody(bool isStrong)
@@ -48,6 +47,6 @@ public class Body : MonoBehaviour
 
     public virtual void SetColor(Color c)
     {
-        _Sprite.color = c; 
+        _Sprite.color = c;
     }
 }

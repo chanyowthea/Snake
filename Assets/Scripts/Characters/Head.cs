@@ -4,15 +4,20 @@ using UnityEngine;
 
 public class Head : Body
 {
-    private void Start()
-    {
+    Vector3 lastPos;
+    Vector2 lastSize;
 
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(lastPos, Size); 
     }
 
     public bool Move(Vector3 pos)
     {
         Vector3 targetPos = this.transform.position + pos;
         var collider = Physics2D.OverlapBox(targetPos, Size, 0);
+        lastPos = targetPos;
+        lastSize = Size;
         if (collider == null)
         {
             if (collider != null)
@@ -35,7 +40,7 @@ public class Head : Body
             else
             {
                 if (body._Character == this._Character)
-                {
+                { 
                     this.transform.position += pos;
                     this.transform.right = pos.normalized;
                     return true;
