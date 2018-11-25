@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     DelayCallUtil _DelayCallUtil;
     List<uint> _DelayCallIds = new List<uint>();
     Queue<Action> _ActionQueue = new Queue<Action>();
+    List<BaseCharacter> _Characters = new List<BaseCharacter>();
 
     private void Awake()
     {
@@ -50,7 +51,7 @@ public class GameManager : MonoBehaviour
         {
             CancelDelayCall(_DelayCallIds[i]);
         }
-        _DelayCallIds.Clear(); 
+        _DelayCallIds.Clear();
     }
 
     public uint DelayCall(float delayTime, Action action, bool isRepeated = false)
@@ -85,6 +86,7 @@ public class GameManager : MonoBehaviour
     void DelayLoad()
     {
         _ActionQueue.Enqueue(PrepareCharacters);
+        _ActionQueue.Enqueue(PrepareUI);
         for (int i = 0; i < 10; i++)
         {
             _ActionQueue.Enqueue(PrepareFoods);
@@ -108,6 +110,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void PrepareUI()
+    {
+        ConfigDataManager.instance.LoadCSV<UICSV>("UI");
+        UIFramework.UIManager.Instance.Open<UIHUD>();
+    }
+
     public PlayerData GetPlayerData(int characterId)
     {
         var ps = _GameData._Players;
@@ -123,7 +131,7 @@ public class GameManager : MonoBehaviour
         return playerData;
     }
 
-    public void RespawnCharacter(int characterId)
+    public BaseCharacter RespawnCharacter(int characterId)
     {
         if (characterId < 0)
         {
@@ -131,7 +139,8 @@ public class GameManager : MonoBehaviour
             player.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             player.transform.position = pos;
-            return;
+            _Characters.Add(player);
+            return player;
         }
 
         if (characterId != 0)
@@ -140,12 +149,16 @@ public class GameManager : MonoBehaviour
             enemy.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             enemy.transform.position = pos;
+            _Characters.Add(enemy);
+            return enemy;
         }
         else
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
             player.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
             player.transform.position = Vector3.zero;
+            _Characters.Add(player);
+            return player;
         }
     }
 
@@ -176,5 +189,18 @@ public class GameManager : MonoBehaviour
     public Body RespawnBody()
     {
         return GameObject.Instantiate(_GameData._BodyPrefab);
+    }
+
+    public void RemoveCharacter(BaseCharacter character)
+    {
+        if (_Characters.Contains(character))
+        {
+            _Characters.Remove(character);
+        }
+    }
+
+    public List<BaseCharacter> GetCharacters()
+    {
+        return _Characters;
     }
 }

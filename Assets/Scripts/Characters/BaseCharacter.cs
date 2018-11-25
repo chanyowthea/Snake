@@ -169,6 +169,7 @@ public class BaseCharacter : MonoBehaviour
     {
         RemoveBody(0);
         _Head.Break();
+        GameManager.instance.RemoveCharacter(this);
         GameObject.Destroy(this.gameObject);
     }
 
