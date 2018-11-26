@@ -4,21 +4,17 @@ using UnityEngine;
 
 public class PlayerController : BaseCharacter
 {
+    public static PlayerController instance { private set; get; }
     [SerializeField] Camera _PlayerCamera;
 
-    private void Start()
+    private void Awake()
     {
-        //InputManager.instance.onValueChanged += OnMove;
+        instance = this; 
     }
 
-    private void OnDestroy()
+    public override void SetData(PlayerData data, string name_, int initBodyLength, float strongRatio = 0.3333f)
     {
-        //InputManager.instance.onValueChanged -= OnMove;
-    }
-
-    public override void SetData(PlayerData data, int initBodyLength, float strongRatio = 0.3333f)
-    {
-        base.SetData(data, initBodyLength, strongRatio);
+        base.SetData(data, name_, initBodyLength, strongRatio);
 
         if (CharacterID != 0)
         {
@@ -70,9 +66,9 @@ public class PlayerController : BaseCharacter
         }
     }
 
-    private void OnMove(Vector2 pos)
+    public void OnMove(Vector2 pos)
     {
-        Debug.Log(pos);
+        //Debug.Log(pos);
         if (pos.x != 0 || pos.y != 0)
         {
             Move(new Vector3(pos.x, pos.y, 0).normalized * MoveSpeed);

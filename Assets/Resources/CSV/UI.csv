@@ -1,3 +1,5 @@
 Type,Path
 唯一标识,路径
 UIHUD,UIHUD
+UIPrompt,UIPrompt
+UIInput,UIInput

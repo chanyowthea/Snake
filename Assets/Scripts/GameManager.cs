@@ -31,6 +31,26 @@ public class GameManager : MonoBehaviour
     Queue<Action> _ActionQueue = new Queue<Action>();
     List<BaseCharacter> _Characters = new List<BaseCharacter>();
 
+    public float GameTime
+    {
+        get
+        {
+            return _DelayCallUtil.GameTime;
+        }
+    }
+
+    public float TimeScale
+    {
+        get
+        {
+            return _DelayCallUtil.Timer._TimeScale;
+        }
+        set
+        {
+            _DelayCallUtil.Timer._TimeScale = value;
+        }
+    }
+
     private void Awake()
     {
         instance = this;
@@ -38,7 +58,13 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        _MainCamera.gameObject.SetActive(false);
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+
         FoodRoot = new GameObject("FoodRoot");
         _DelayCallUtil = gameObject.AddComponent<DelayCallUtil>();
         var id = DelayCall(0, DelayLoad);
@@ -85,6 +111,7 @@ public class GameManager : MonoBehaviour
 
     void DelayLoad()
     {
+        _ActionQueue.Enqueue(PrepareResource);
         _ActionQueue.Enqueue(PrepareCharacters);
         _ActionQueue.Enqueue(PrepareUI);
         for (int i = 0; i < 10; i++)
@@ -95,8 +122,12 @@ public class GameManager : MonoBehaviour
 
     void PrepareCharacters()
     {
+        _MainCamera.gameObject.SetActive(false);
         RespawnCharacter(0);
-        RespawnCharacter(-1);
+        //RespawnCharacter(-1);
+        RespawnCharacter(1);
+        RespawnCharacter(2);
+        RespawnCharacter(3);
         RespawnCharacter(1);
         RespawnCharacter(2);
         RespawnCharacter(3);
@@ -112,8 +143,14 @@ public class GameManager : MonoBehaviour
 
     void PrepareUI()
     {
-        ConfigDataManager.instance.LoadCSV<UICSV>("UI");
         UIFramework.UIManager.Instance.Open<UIHUD>();
+        UIFramework.UIManager.Instance.Open<UIInput>();
+    }
+
+    void PrepareResource()
+    {
+        ConfigDataManager.instance.LoadCSV<UICSV>("UI");
+        ConfigDataManager.instance.LoadCSV<PlayerNameCSV>("PlayerName");
     }
 
     public PlayerData GetPlayerData(int characterId)
@@ -136,7 +173,7 @@ public class GameManager : MonoBehaviour
         if (characterId < 0)
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
+            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             player.transform.position = pos;
             _Characters.Add(player);
@@ -146,7 +183,7 @@ public class GameManager : MonoBehaviour
         if (characterId != 0)
         {
             var enemy = GameObject.Instantiate(_GameData._EnemyPrefab);
-            enemy.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
+            enemy.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             enemy.transform.position = pos;
             _Characters.Add(enemy);
@@ -155,11 +192,18 @@ public class GameManager : MonoBehaviour
         else
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), _GameData._InitBodyLength);
+            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
             player.transform.position = Vector3.zero;
             _Characters.Add(player);
             return player;
         }
+    }
+
+    public string GetRandomName()
+    {
+        var names = ConfigDataManager.instance.GetDataList<PlayerNameCSV>();
+        int index = RandomUtil.instance.Next(0, names.Count);
+        return names[index].As<PlayerNameCSV>()._Name;
     }
 
     public FoodData GetFoodData(int foodId)
@@ -202,5 +246,10 @@ public class GameManager : MonoBehaviour
     public List<BaseCharacter> GetCharacters()
     {
         return _Characters;
+    }
+
+    public float GetRaceEndTime()
+    {
+        return GameTime + _GameData._RaceTime * 60;
     }
 }

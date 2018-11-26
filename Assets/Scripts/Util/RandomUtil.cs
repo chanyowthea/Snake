@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class RandomUtil : TSingleton<RandomUtil>
 {
-    System.Random _random = new System.Random(19930108);
+    System.Random _random = new System.Random();
 
     public int Next()
     {

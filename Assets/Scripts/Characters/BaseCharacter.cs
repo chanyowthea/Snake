@@ -1,15 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BaseCharacter : MonoBehaviour
+public class BaseCharacter : MonoBehaviour, IComparable
 {
     protected float _MoveSpeed;
     public virtual float MoveSpeed
     {
         get
         {
-            return _MoveSpeed * Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f));
+            return _MoveSpeed * Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * GameManager.instance.TimeScale;
         }
         protected set
         {
@@ -19,6 +20,7 @@ public class BaseCharacter : MonoBehaviour
     public int CharacterID { get; private set; }
     public float StrongRatio { get; private set; }
     public float Scores { get; private set; }
+    public string Name { get; private set; }
 
     /// <summary>
     /// total body length
@@ -66,14 +68,17 @@ public class BaseCharacter : MonoBehaviour
     // set body in order. 
     List<Body> _Bodies = new List<Body>();
     [SerializeField] Head _Head;
+    [SerializeField] CharacterName _CharacterName;
 
-    public virtual void SetData(PlayerData data, int initBodyLength, float strongRatio = ConstValue._DefaultStrongRatio)
+    public virtual void SetData(PlayerData data, string name_, int initBodyLength, float strongRatio = ConstValue._DefaultStrongRatio)
     {
         if (data == null)
         {
             return;
         }
 
+        Name = name_; 
+        _CharacterName.SetData(name_); 
         PlayerData_ = data;
         CharacterID = data._ID;
         MoveSpeed = data._MoveSpeed;
@@ -181,5 +186,16 @@ public class BaseCharacter : MonoBehaviour
             Scores -= 1;
             AddBody();
         }
+    }
+
+    public int CompareTo(object obj)
+    {
+        int result = 1;
+        if (obj != null && obj is BaseCharacter)
+        {
+            BaseCharacter person = (BaseCharacter)obj;
+            result = -this.TotalLength.CompareTo(person.TotalLength);
+        }
+        return result;
     }
 }

@@ -20,6 +20,8 @@ public class FoodData
 
 public class GameData : ScriptableObject
 {
+    [Tooltip("minutes of a race")]
+    public int _RaceTime; // minutes
     public int _InitBodyLength = 3; 
     public PlayerData[] _Players;
     public Enemy _EnemyPrefab;
