@@ -59,7 +59,7 @@ public class Head : Body
                         }
                         else
                         {
-                            pass = false; 
+                            pass = false;
                         }
                     }
                     else
@@ -159,16 +159,25 @@ public class Head : Body
         {
             Debug.Log("Eat food=" + food.size);
             GameObject.Destroy(food.gameObject);
+            var iAdd = food.GetComponent<IAddStrongBody>();
+            if (iAdd != null)
+            {
+                if (iAdd.IsAddStrongBody())
+                {
+                    _Character.AddBody(true);
+                }
+            }
             var iScore = food.GetComponent<IScore>();
             if (iScore != null)
             {
-                _Character.AddScore(iScore.GetScore());
+                _Character.AddScore(iScore.GetScore(), !iAdd.IsAddStrongBody());
             }
         }
     }
 
     public override float GetScore()
     {
-        return base.GetScore() * 2;
+        // TODO
+        return ConstValue._HeadScores;
     }
 }

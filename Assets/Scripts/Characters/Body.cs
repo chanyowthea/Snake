@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Body : MonoBehaviour, IScore
+public class Body : MonoBehaviour, IScore, IAddStrongBody
 {
     [SerializeField] protected SpriteRenderer _Sprite;
     [SerializeField] protected BoxCollider2D _Collider; // TODO circle？
@@ -64,6 +64,11 @@ public class Body : MonoBehaviour, IScore
 
     public virtual float GetScore()
     {
-        return Size.x * 2; 
+        return IsStrong ? ConstValue._StrongBodyScores : ConstValue._OneBodyScores; 
+    }
+
+    public bool IsAddStrongBody()
+    {
+        return IsStrong; 
     }
 }

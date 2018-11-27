@@ -17,9 +17,10 @@ public class BaseCharacter : MonoBehaviour, IComparable
             _MoveSpeed = value;
         }
     }
-    public int CharacterID { get; private set; }
-    public float Scores { get; private set; }
-    public string Name { get; private set; }
+    public int CharacterID { get; protected set; }
+    public float Scores { get; protected set; }
+    protected float LengthPoints;
+    public string Name { get; protected set; }
 
     /// <summary>
     /// total body length
@@ -70,8 +71,8 @@ public class BaseCharacter : MonoBehaviour, IComparable
             return;
         }
 
-        Name = name_; 
-        _CharacterName.SetData(name_); 
+        Name = name_;
+        _CharacterName.SetData(name_);
         PlayerData_ = data;
         CharacterID = data._ID;
         MoveSpeed = data._MoveSpeed;
@@ -112,7 +113,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
 
     }
 
-    public virtual void AddBody()
+    public virtual void AddBody(bool isStrong = false)
     {
         var body = GameManager.instance.RespawnBody();
         if (_Bodies.Count == 0)
@@ -127,6 +128,14 @@ public class BaseCharacter : MonoBehaviour, IComparable
         body.SetData(this, _Bodies.Count, _Bodies.Count == 0 ? _Head : _Bodies[_Bodies.Count - 1]);
         _Bodies.Add(body);
         body.transform.SetParent(this.transform);
+
+        // set strong body information. 
+        if (isStrong)
+        {
+            StrongLength += 1;
+        }
+        int minStrongLength = Mathf.RoundToInt(ConstValue._DefaultStrongRatio * BodyLength);
+        StrongLength = StrongLength < minStrongLength ? minStrongLength : StrongLength;
         UpdateStrongBody();
     }
 
@@ -150,6 +159,10 @@ public class BaseCharacter : MonoBehaviour, IComparable
         Debug.LogFormat("RemoveBody rangeCount={0}, prev={1}", _Bodies.Count - index, _Bodies.Count);
         _Bodies.RemoveRange(index, _Bodies.Count - index);
         Debug.LogFormat("RemoveBody index={0}, now={1}", index, _Bodies.Count);
+        if (StrongLength > BodyLength)
+        {
+            StrongLength = BodyLength;
+        }
         UpdateStrongBody();
     }
 
@@ -170,13 +183,17 @@ public class BaseCharacter : MonoBehaviour, IComparable
         GameObject.Destroy(this.gameObject);
     }
 
-    public virtual void AddScore(float delta)
+    public virtual void AddScore(float delta, bool addBody = true)
     {
         Scores += delta;
-        while (Scores >= 1)
+        if (addBody)
         {
-            Scores -= 1;
-            AddBody();
+            LengthPoints += delta;
+            while (LengthPoints >= ConstValue._OneBodyScores)
+            {
+                LengthPoints -= ConstValue._OneBodyScores;
+                AddBody();
+            }
         }
     }
 

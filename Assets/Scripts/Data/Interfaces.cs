@@ -4,5 +4,10 @@ using UnityEngine;
 
 public interface IScore
 {
-    float GetScore(); 
+    float GetScore();
+}
+
+public interface IAddStrongBody
+{
+    bool IsAddStrongBody();
 }

@@ -12,6 +12,14 @@ using UnityEngine;
 // 速度要一致
 // AI
 
+//红色增加护甲值
+//护甲加分数不同
+//死亡次数
+//击杀数
+//添加障碍物
+//HUD分数
+//Head的分数
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance { private set; get; }
@@ -139,6 +147,10 @@ public class GameManager : MonoBehaviour
         {
             RespawnFood(1);
         }
+        for (int i = 0; i < 1; i++)
+        {
+            RespawnFood(2);
+        }
     }
 
     void PrepareUI()
@@ -173,7 +185,7 @@ public class GameManager : MonoBehaviour
         if (characterId < 0)
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
+            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             player.transform.position = pos;
             _Characters.Add(player);

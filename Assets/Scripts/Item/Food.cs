@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Food : MonoBehaviour, IScore
+public class Food : MonoBehaviour, IScore, IAddStrongBody
 {
     [SerializeField] BoxCollider2D _Collider;
     [SerializeField] SpriteRenderer _Sprite;
@@ -23,7 +23,12 @@ public class Food : MonoBehaviour, IScore
 
     public virtual float GetScore()
     {
-        return Size.x / 2f;
+        return ConstValue._ScoreUnit;
+    }
+
+    public bool IsAddStrongBody()
+    {
+        return FoodData_._IsAddStrongBody; 
     }
 
     public void SetData(FoodData data)

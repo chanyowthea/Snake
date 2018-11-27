@@ -16,6 +16,10 @@ public class FoodData
 {
     public int _ID;
     public Color _Color = Color.blue;
+    public int _Scores;
+    
+    // TODO
+    public bool _IsAddStrongBody; 
 }
 
 public class GameData : ScriptableObject
