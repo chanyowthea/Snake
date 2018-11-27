@@ -203,7 +203,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         if (obj != null && obj is BaseCharacter)
         {
             BaseCharacter person = (BaseCharacter)obj;
-            result = -this.TotalLength.CompareTo(person.TotalLength);
+            result = -this.Scores.CompareTo(person.Scores);
         }
         return result;
     }

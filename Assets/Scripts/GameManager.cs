@@ -19,6 +19,8 @@ using UnityEngine;
 //添加障碍物
 //HUD分数
 //Head的分数
+//HUD排序
+//    初始长度
 
 public class GameManager : MonoBehaviour
 {
@@ -195,7 +197,7 @@ public class GameManager : MonoBehaviour
         if (characterId != 0)
         {
             var enemy = GameObject.Instantiate(_GameData._EnemyPrefab);
-            enemy.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
+            enemy.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             enemy.transform.position = pos;
             _Characters.Add(enemy);
@@ -204,7 +206,7 @@ public class GameManager : MonoBehaviour
         else
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), _GameData._InitBodyLength);
+            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
             player.transform.position = Vector3.zero;
             _Characters.Add(player);
             return player;

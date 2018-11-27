@@ -51,7 +51,7 @@ class UIHUD : BaseUI
         {
             var character = cs[i];
             var item = _RankItems[i];
-            item.SetData(character.Name, character.TotalLength, character.CharacterID == PlayerController.instance.CharacterID);
+            item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
         }
     }
 
