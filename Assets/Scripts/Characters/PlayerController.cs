@@ -12,9 +12,9 @@ public class PlayerController : BaseCharacter
         instance = this; 
     }
 
-    public override void SetData(PlayerData data, string name_, int initBodyLength, float strongRatio = 0.3333f)
+    public override void SetData(PlayerData data, string name_, int initBodyLength)
     {
-        base.SetData(data, name_, initBodyLength, strongRatio);
+        base.SetData(data, name_, initBodyLength);
 
         if (CharacterID != 0)
         {

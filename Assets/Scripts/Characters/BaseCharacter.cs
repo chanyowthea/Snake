@@ -18,7 +18,6 @@ public class BaseCharacter : MonoBehaviour, IComparable
         }
     }
     public int CharacterID { get; private set; }
-    public float StrongRatio { get; private set; }
     public float Scores { get; private set; }
     public string Name { get; private set; }
 
@@ -47,13 +46,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
     /// <summary>
     /// strong body length
     /// </summary>
-    public int StrongLength
-    {
-        get
-        {
-            return _Bodies.Count + 1;
-        }
-    }
+    public int StrongLength { private set; get; }
 
     public Body Head
     {
@@ -70,7 +63,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
     [SerializeField] Head _Head;
     [SerializeField] CharacterName _CharacterName;
 
-    public virtual void SetData(PlayerData data, string name_, int initBodyLength, float strongRatio = ConstValue._DefaultStrongRatio)
+    public virtual void SetData(PlayerData data, string name_, int initBodyLength)
     {
         if (data == null)
         {
@@ -82,7 +75,6 @@ public class BaseCharacter : MonoBehaviour, IComparable
         PlayerData_ = data;
         CharacterID = data._ID;
         MoveSpeed = data._MoveSpeed;
-        StrongRatio = strongRatio;
         Head.SetData(this, 0, null);
         for (int i = 0; i < initBodyLength; i++)
         {
@@ -166,7 +158,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         for (int i = 0, length = _Bodies.Count; i < length; i++)
         {
             var b = _Bodies[i];
-            b.UpdateStrongBody(i < Mathf.RoundToInt(StrongRatio * (length - 1)));
+            b.UpdateStrongBody(i < StrongLength);
         }
     }
 
