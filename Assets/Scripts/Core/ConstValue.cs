@@ -12,6 +12,7 @@ public static class ConstValue
     public const int _StrongBodyScores = (int)(_OneBodyScores * 1.25f);
     public const int _HeadScores = _OneBodyScores * 2;
     public const int _DefaultBodyLength = 2;
-    public const int _MinusScorePerDie = _OneBodyScores * _DefaultBodyLength * 5;
+    public const int _MinusScorePerDie = _OneBodyScores * _DefaultBodyLength * 2;
     public const int _ScoreUnit = 1;
+    public const float _KillScoresRatio = 0.2f;
 }

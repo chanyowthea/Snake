@@ -9,12 +9,18 @@ public class PlayerController : BaseCharacter
 
     private void Awake()
     {
-        instance = this; 
+#if UNITY_EDITOR
+        if (instance != null)
+        {
+            return;
+        }
+#endif
+        instance = this;
     }
 
-    public override void SetData(PlayerData data, string name_, int initBodyLength)
+    public override void SetData(PlayerInfo data, int initBodyLength)
     {
-        base.SetData(data, name_, initBodyLength);
+        base.SetData(data, initBodyLength);
 
         if (CharacterID != 0)
         {
@@ -78,6 +84,6 @@ public class PlayerController : BaseCharacter
     public override void Die()
     {
         base.Die();
-        GameManager.instance.RespawnCharacter(CharacterID);
+        GameManager.instance.RespawnCharacter(CharacterID, CharacterUniqueID);
     }
 }

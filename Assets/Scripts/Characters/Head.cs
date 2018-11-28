@@ -107,11 +107,12 @@ public class Head : Body
             // then the other snake would die. 
             if (body._Character.TotalLength < this._Character.TotalLength)
             {
-                body._Character.Die();
                 if (body != null)
                 {
                     Eat(body.GetCollider());
                 }
+                _Character.Kill(body._Character);
+                body._Character.Die();
                 return true;
             }
             return false;
@@ -177,7 +178,7 @@ public class Head : Body
 
     public override float GetScore()
     {
-        // TODO
-        return ConstValue._HeadScores;
+        return ConstValue._HeadScores + ((_Character.BodyLength - _Character.StrongLength) * ConstValue._OneBodyScores
+            + _Character.StrongLength * ConstValue._StrongBodyScores) * ConstValue._KillScoresRatio;
     }
 }

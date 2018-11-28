@@ -7,6 +7,6 @@ public class Enemy : BaseCharacter
     public override void Die()
     {
         base.Die();
-        GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3)); 
+        GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3), CharacterUniqueID); 
     }
 }

@@ -11,8 +11,14 @@ class UIHUD : BaseUI
     [SerializeField] RectTransform _RankContent;
     [SerializeField] RankItem _RankItemPrefab;
     [SerializeField] CountDownText _CountDownText;
+    [SerializeField] Text _KillText;
+    [SerializeField] Text _DieText;
     List<RankItem> _RankItems = new List<RankItem>();
     string _PromptContentFormat = "你的排名：{0}";
+    string _KillCountFormat = "击杀：{0}";
+    string _DieTimesFormat = "死亡：{0}";
+    uint _HUDCallID;
+    uint _RankCallID;
 
     public UIHUD()
     {
@@ -38,8 +44,9 @@ class UIHUD : BaseUI
             item.transform.localScale = Vector3.one;
             _RankItems.Add(item);
         }
-        UpdateRankInfo();
-        GameManager.instance.DelayCall(1, UpdateRankInfo, true);
+        //UpdateRankInfo();
+        _RankCallID = GameManager.instance.DelayCall(1, UpdateRankInfo, true);
+        _HUDCallID = GameManager.instance.DelayCall(1, UpdateHUDInfo, true);
         _CountDownText.SetCountDownEndTime(GameManager.instance.GetRaceEndTime(), "", "", true, null, OnRaceEnd);
     }
 
@@ -53,6 +60,12 @@ class UIHUD : BaseUI
             var item = _RankItems[i];
             item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
         }
+    }
+
+    void UpdateHUDInfo()
+    {
+        _KillText.text = string.Format(_KillCountFormat, PlayerController.instance.PlayerInfo_._KillCount);
+        _DieText.text = string.Format(_DieTimesFormat, PlayerController.instance.PlayerInfo_._DieTimes);
     }
 
     void OnRaceEnd()
@@ -73,6 +86,14 @@ class UIHUD : BaseUI
 
     internal override void Close()
     {
+        if (_HUDCallID != 0)
+        {
+            GameManager.instance.CancelDelayCall(_HUDCallID);
+        }
+        if (_RankCallID != 0)
+        {
+            GameManager.instance.CancelDelayCall(_RankCallID);
+        }
         for (int i = 0, length = _RankItems.Count; i < length; i++)
         {
             var item = _RankItems[i];

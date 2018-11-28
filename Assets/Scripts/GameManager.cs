@@ -9,18 +9,11 @@ using UnityEngine;
 // -- BUG -- 
 
 
-// 速度要一致
 // AI
 
-//红色增加护甲值
-//护甲加分数不同
 //死亡次数
 //击杀数
 //添加障碍物
-//HUD分数
-//Head的分数
-//HUD排序
-//    初始长度
 
 public class GameManager : MonoBehaviour
 {
@@ -60,6 +53,8 @@ public class GameManager : MonoBehaviour
             _DelayCallUtil.Timer._TimeScale = value;
         }
     }
+    UniqueIDGenerator _IDGenerator = new UniqueIDGenerator();
+    List<int> _RandomNameIDs = new List<int>();
 
     private void Awake()
     {
@@ -83,6 +78,8 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        _Characters.Clear();
+        _RandomNameIDs.Clear();
         for (int i = 0, length = _DelayCallIds.Count; i < length; i++)
         {
             CancelDelayCall(_DelayCallIds[i]);
@@ -133,8 +130,22 @@ public class GameManager : MonoBehaviour
     void PrepareCharacters()
     {
         _MainCamera.gameObject.SetActive(false);
+        var list = new List<PlayerNameCSV>();
+        var csvs = ConfigDataManager.instance.GetDataList<PlayerNameCSV>();
+        for (int i = 0; i < csvs.Count; i++)
+        {
+            list.Add(csvs[i] as PlayerNameCSV);
+        }
+        for (int i = 0; list.Count > 0; i++)
+        {
+            var index = RandomUtil.instance.Next(0, list.Count);
+            _RandomNameIDs.Add(list[index]._ID);
+            list.RemoveAt(index);
+        }
         RespawnCharacter(0);
-        //RespawnCharacter(-1);
+#if UNITY_EDITOR
+        RespawnCharacter(-1);
+#endif
         RespawnCharacter(1);
         RespawnCharacter(2);
         RespawnCharacter(3);
@@ -182,12 +193,12 @@ public class GameManager : MonoBehaviour
         return playerData;
     }
 
-    public BaseCharacter RespawnCharacter(int characterId)
+    public BaseCharacter RespawnCharacter(int characterId, uint uniqueID = 0)
     {
         if (characterId < 0)
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
+            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             player.transform.position = pos;
             _Characters.Add(player);
@@ -197,7 +208,7 @@ public class GameManager : MonoBehaviour
         if (characterId != 0)
         {
             var enemy = GameObject.Instantiate(_GameData._EnemyPrefab);
-            enemy.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
+            enemy.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
             enemy.transform.position = pos;
             _Characters.Add(enemy);
@@ -206,18 +217,39 @@ public class GameManager : MonoBehaviour
         else
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GameManager.instance.GetPlayerData(characterId), GetRandomName(), ConstValue._DefaultBodyLength);
+            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             player.transform.position = Vector3.zero;
             _Characters.Add(player);
             return player;
         }
     }
 
+    public PlayerInfo GetPlayerInfo(int characterId, uint uniqueID)
+    {
+        PlayerInfo playerInfo = null;
+        if (uniqueID == 0)
+        {
+            uniqueID = _IDGenerator.GetUniqueID();
+            playerInfo = RunTimeData.instance.GetPlayerInfo(uniqueID);
+            playerInfo._UniqueID = uniqueID;
+            playerInfo._Name = GetRandomName();
+            playerInfo._PlayerData = GameManager.instance.GetPlayerData(characterId);
+        }
+        else
+        {
+            playerInfo = RunTimeData.instance.GetPlayerInfo(uniqueID);
+        }
+        return playerInfo;
+    }
+
+    static int _Count;
     public string GetRandomName()
     {
-        var names = ConfigDataManager.instance.GetDataList<PlayerNameCSV>();
-        int index = RandomUtil.instance.Next(0, names.Count);
-        return names[index].As<PlayerNameCSV>()._Name;
+        _Count += 1;
+        int id = _RandomNameIDs[0];
+        _RandomNameIDs.RemoveAt(0);
+        var csv = ConfigDataManager.instance.GetData<PlayerNameCSV>(id.ToString());
+        return csv == null ? "" : csv._Name;
     }
 
     public FoodData GetFoodData(int foodId)

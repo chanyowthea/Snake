@@ -17,10 +17,56 @@ public class BaseCharacter : MonoBehaviour, IComparable
             _MoveSpeed = value;
         }
     }
-    public int CharacterID { get; protected set; }
-    public float Scores { get; protected set; }
+    public int CharacterID
+    {
+        get
+        {
+            if (PlayerInfo_ == null || PlayerInfo_._PlayerData == null)
+            {
+                return int.MinValue;
+            }
+            return PlayerInfo_._PlayerData._ID;
+        }
+    }
+
+    public uint CharacterUniqueID
+    {
+        get
+        {
+            if (PlayerInfo_ == null)
+            {
+                return uint.MinValue;
+            }
+            return PlayerInfo_._UniqueID;
+        }
+    }
+
+    float _Scores;
+    public float Scores
+    {
+        get
+        {
+            return _Scores;
+        }
+
+        protected set
+        {
+            _Scores = value;
+            RunTimeData.instance.UpdateScores(CharacterUniqueID, (int)_Scores);
+        }
+    }
     protected float LengthPoints;
-    public string Name { get; protected set; }
+    public string Name
+    {
+        get
+        {
+            if (PlayerInfo_ == null)
+            {
+                return "";
+            }
+            return PlayerInfo_._Name;
+        }
+    }
 
     /// <summary>
     /// total body length
@@ -57,25 +103,34 @@ public class BaseCharacter : MonoBehaviour, IComparable
         }
     }
 
-    public PlayerData PlayerData_ { private set; get; }
+    public PlayerData PlayerData_
+    {
+        get
+        {
+            if (PlayerInfo_ == null)
+            {
+                return null;
+            }
+            return PlayerInfo_._PlayerData;
+        }
+    }
+    public PlayerInfo PlayerInfo_ { private set; get; }
 
     // set body in order. 
     List<Body> _Bodies = new List<Body>();
     [SerializeField] Head _Head;
     [SerializeField] CharacterName _CharacterName;
 
-    public virtual void SetData(PlayerData data, string name_, int initBodyLength)
+    public virtual void SetData(PlayerInfo data, int initBodyLength)
     {
-        if (data == null)
+        if (data == null || data._PlayerData == null)
         {
             return;
         }
-
-        Name = name_;
-        _CharacterName.SetData(name_);
-        PlayerData_ = data;
-        CharacterID = data._ID;
-        MoveSpeed = data._MoveSpeed;
+        PlayerInfo_ = data; 
+        _CharacterName.SetData(PlayerInfo_._Name);
+        Scores = PlayerInfo_._Scores; 
+        MoveSpeed = PlayerInfo_._PlayerData._MoveSpeed;
         Head.SetData(this, 0, null);
         for (int i = 0; i < initBodyLength; i++)
         {
@@ -111,6 +166,11 @@ public class BaseCharacter : MonoBehaviour, IComparable
     public virtual void Attack(Body body)
     {
 
+    }
+
+    public virtual void Kill(BaseCharacter character)
+    {
+        PlayerInfo_._KillCount += 1; 
     }
 
     public virtual void AddBody(bool isStrong = false)
@@ -154,11 +214,8 @@ public class BaseCharacter : MonoBehaviour, IComparable
         {
             var b = _Bodies[i];
             b.Break();
-            //GameObject.Destroy(b.gameObject); 
         }
-        Debug.LogFormat("RemoveBody rangeCount={0}, prev={1}", _Bodies.Count - index, _Bodies.Count);
         _Bodies.RemoveRange(index, _Bodies.Count - index);
-        Debug.LogFormat("RemoveBody index={0}, now={1}", index, _Bodies.Count);
         if (StrongLength > BodyLength)
         {
             StrongLength = BodyLength;
@@ -177,6 +234,12 @@ public class BaseCharacter : MonoBehaviour, IComparable
 
     public virtual void Die()
     {
+        PlayerInfo_._DieTimes += 1; 
+        Scores -= ConstValue._MinusScorePerDie;
+        if (Scores < 0)
+        {
+            Scores = 0;
+        }
         RemoveBody(0);
         _Head.Break();
         GameManager.instance.RemoveCharacter(this);
