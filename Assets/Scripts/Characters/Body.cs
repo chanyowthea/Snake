@@ -69,6 +69,18 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public bool IsAddStrongBody()
     {
-        return IsStrong; 
+        return IsStrong;
+    }
+
+    public virtual int Attack()
+    {
+
+        return 0;
+    }
+
+    public virtual int BeAttacked()
+    {
+
+        return 0;
     }
 }

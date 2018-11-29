@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TsiU;
 using UnityEngine;
 
 public class BaseCharacter : MonoBehaviour, IComparable
@@ -95,7 +96,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
     /// </summary>
     public int StrongLength { private set; get; }
 
-    public Body Head
+    public Head Head
     {
         get
         {
@@ -120,6 +121,9 @@ public class BaseCharacter : MonoBehaviour, IComparable
     List<Body> _Bodies = new List<Body>();
     [SerializeField] Head _Head;
     [SerializeField] CharacterName _CharacterName;
+    protected const string _TARGET_POS = "TargetPos";
+    protected const string _TARGET_ENEMY = "TargetEnemy";
+    protected TBlackBoard _Blackboard = new TBlackBoard();
 
     public virtual void SetData(PlayerInfo data, int initBodyLength)
     {
@@ -127,9 +131,9 @@ public class BaseCharacter : MonoBehaviour, IComparable
         {
             return;
         }
-        PlayerInfo_ = data; 
+        PlayerInfo_ = data;
         _CharacterName.SetData(PlayerInfo_._Name);
-        Scores = PlayerInfo_._Scores; 
+        Scores = PlayerInfo_._Scores;
         MoveSpeed = PlayerInfo_._PlayerData._MoveSpeed;
         Head.SetData(this, 0, null);
         for (int i = 0; i < initBodyLength; i++)
@@ -163,14 +167,9 @@ public class BaseCharacter : MonoBehaviour, IComparable
         return true;
     }
 
-    public virtual void Attack(Body body)
-    {
-
-    }
-
     public virtual void Kill(BaseCharacter character)
     {
-        PlayerInfo_._KillCount += 1; 
+        PlayerInfo_._KillCount += 1;
     }
 
     public virtual void AddBody(bool isStrong = false)
@@ -234,7 +233,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
 
     public virtual void Die()
     {
-        PlayerInfo_._DieTimes += 1; 
+        PlayerInfo_._DieTimes += 1;
         Scores -= ConstValue._MinusScorePerDie;
         if (Scores < 0)
         {
@@ -269,5 +268,44 @@ public class BaseCharacter : MonoBehaviour, IComparable
             result = -this.Scores.CompareTo(person.Scores);
         }
         return result;
+    }
+
+    public virtual void SetTargetEnemy(Body value)
+    {
+        Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value._Character));
+        _Blackboard.SetValue(_TARGET_ENEMY, value);
+    }
+
+    public virtual Body GetTargetEnemy()
+    {
+        return _Blackboard.GetValue<Body>(_TARGET_ENEMY, null);
+    }
+
+    /// <summary>
+    /// set target position should set enemy to null. 
+    /// </summary>
+    /// <param name="value"></param>
+    public virtual void SetTargetPos(Vector3 value)
+    {
+        var enemy = GetTargetEnemy();
+        if (enemy != null)
+        {
+            SetTargetEnemy(null);
+        }
+        _Blackboard.SetValue(_TARGET_POS, value);
+    }
+
+    /// <summary>
+    /// get target enemy position is preferential. 
+    /// </summary>
+    /// <returns></returns>
+    public virtual Vector3 GetTargetPos()
+    {
+        var enemy = GetTargetEnemy();
+        if (enemy == null)
+        {
+            return _Blackboard.GetValue<Vector3>(_TARGET_POS, Vector3.zero);
+        }
+        return enemy.transform.position;
     }
 }
