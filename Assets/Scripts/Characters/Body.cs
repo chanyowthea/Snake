@@ -5,18 +5,18 @@ using UnityEngine;
 public class Body : MonoBehaviour, IScore, IAddStrongBody
 {
     [SerializeField] protected SpriteRenderer _Sprite;
-    [SerializeField] protected BoxCollider2D _Collider; // TODO circle？
+    [SerializeField] protected CircleCollider2D _Collider; 
     protected Body _PrevBody;
     public BaseCharacter _Character { protected set; get; }
 
     public int Index { protected set; get; }
     public bool IsStrong { protected set; get; }
 
-    public Vector2 Size
+    public float Radius
     {
         get
         {
-            return new Vector2(_Collider.size.x * transform.lossyScale.x, _Collider.size.y * transform.lossyScale.y);
+            return _Collider.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y);
         }
     }
 
@@ -29,13 +29,13 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public virtual void UpdatePos()
     {
-        var tailPos = _PrevBody.transform.position + -_PrevBody.transform.right * _PrevBody.Size.x / 2f;
-        if (Vector3.Distance(tailPos, transform.position) < Size.x / 2f)
+        var tailPos = _PrevBody.transform.position + -_PrevBody.transform.right * _PrevBody.Radius;
+        if (Vector3.Distance(tailPos, transform.position) < Radius)
         {
             return;
         }
         var dir = (tailPos - transform.position).normalized;
-        transform.position = tailPos + -dir * Size.x / 2f;
+        transform.position = tailPos + -dir * Radius;
         transform.right = dir;
     }
 
@@ -57,7 +57,7 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
         transform.SetParent(GameManager.instance.FoodRoot.transform); 
     }
 
-    public BoxCollider2D GetCollider()
+    public CircleCollider2D GetCollider()
     {
         return _Collider;
     }

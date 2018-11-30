@@ -6,6 +6,22 @@ using UnityEngine;
 
 public class BaseCharacter : MonoBehaviour, IComparable
 {
+    public virtual bool IsLocalPlayer { protected set; get; }
+
+    [SerializeField] float _VisualField = 6;
+    public virtual float VisualField
+    {
+        get
+        {
+            return _VisualField;
+        }
+
+        protected set
+        {
+            _VisualField = value;
+        }
+    }
+
     protected float _MoveSpeed;
     public virtual float MoveSpeed
     {
@@ -177,12 +193,12 @@ public class BaseCharacter : MonoBehaviour, IComparable
         var body = GameManager.instance.RespawnBody();
         if (_Bodies.Count == 0)
         {
-            body.transform.position = _Head.transform.position + -_Head.transform.right * body.Size.x;
+            body.transform.position = _Head.transform.position + -_Head.transform.right * body.Radius * 2;
         }
         else
         {
             var b = _Bodies[_Bodies.Count - 1];
-            body.transform.position = b.transform.position + -b.transform.right * body.Size.x;
+            body.transform.position = b.transform.position + -b.transform.right * body.Radius * 2;
         }
         body.SetData(this, _Bodies.Count, _Bodies.Count == 0 ? _Head : _Bodies[_Bodies.Count - 1]);
         _Bodies.Add(body);
@@ -272,7 +288,10 @@ public class BaseCharacter : MonoBehaviour, IComparable
 
     public virtual void SetTargetEnemy(Body value)
     {
-        Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value._Character));
+        if (value != null)
+        {
+            Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value._Character));
+        }
         _Blackboard.SetValue(_TARGET_ENEMY, value);
     }
 

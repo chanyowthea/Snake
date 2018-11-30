@@ -4,6 +4,19 @@ using UnityEngine;
 
 public class PlayerController : BaseCharacter
 {
+    public override bool IsLocalPlayer
+    {
+        get
+        {
+            return true;
+        }
+
+        protected set
+        {
+            base.IsLocalPlayer = value;
+        }
+    }
+
     public static PlayerController instance { private set; get; }
     [SerializeField] Camera _PlayerCamera;
 
@@ -41,7 +54,8 @@ public class PlayerController : BaseCharacter
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                Debug.LogError("BodyLength=" + BodyLength);
+                var go = GameObject.Find("Enemy(Clone)"); 
+                go.GetComponent<Enemy>().SetTargetEnemy(null); 
             }
             return;
             if (Input.GetKeyDown(KeyCode.D))
@@ -74,7 +88,6 @@ public class PlayerController : BaseCharacter
 
     public void OnMove(Vector2 pos)
     {
-        //Debug.Log(pos);
         if (pos.x != 0 || pos.y != 0)
         {
             Move(new Vector3(pos.x, pos.y, 0).normalized * MoveSpeed);
@@ -84,6 +97,7 @@ public class PlayerController : BaseCharacter
     public override void Die()
     {
         base.Die();
+        instance = null; 
         GameManager.instance.RespawnCharacter(CharacterID, CharacterUniqueID);
     }
 }

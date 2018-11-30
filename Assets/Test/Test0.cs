@@ -5,6 +5,7 @@ using UnityEngine;
 public class Test0 : MonoBehaviour
 {
     [SerializeField] float MoveSpeed = 0.2f;
+    [SerializeField] CircleCollider2D _Collider; 
     void Start()
     {
     }
@@ -22,18 +23,18 @@ public class Test0 : MonoBehaviour
     Vector3 lastPos;
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireCube(lastPos, new Vector2(1, 1));
+        Gizmos.DrawWireSphere(lastPos, _Collider.radius * transform.lossyScale.x);
     }
 
     void Move(Vector3 pos)
     {
         lastPos = transform.position + pos;
-        //var hit = Physics2D.BoxCast(transform.position + pos, new Vector2(0.5f, 0.5f), 0, transform.right); 
-        var c = Physics2D.OverlapBox(transform.position + pos, new Vector2(1f, 1f), 0, LayerMask.GetMask("Enemy"));
-        //Debug.DrawLine(transform.position + pos); 
-        if (c != null)
+        var c = Physics2D.OverlapCircleAll(transform.position + pos, _Collider.radius * transform.lossyScale.x);
+        if (c != null
+             && c.Length > 1
+            )
         {
-            Debug.Log("c.name=" + c.name);
+            Debug.Log("c.name=" + c[0].name);
         }
         else
         {

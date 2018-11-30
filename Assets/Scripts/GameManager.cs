@@ -6,7 +6,10 @@ using UnityEngine;
 // -- BUG -- 
 
 
-// AI
+// logic of artificial intelligence
+// chase
+// wander 
+
 
 //添加障碍物
 
@@ -34,6 +37,14 @@ public class GameManager : MonoBehaviour
         get
         {
             return _DelayCallUtil.GameTime;
+        }
+    }
+
+    public float DeltaTime
+    {
+        get
+        {
+            return _DelayCallUtil.Timer.DeltaTime;
         }
     }
 
@@ -139,14 +150,14 @@ public class GameManager : MonoBehaviour
         }
         RespawnCharacter(0);
 #if UNITY_EDITOR
-        RespawnCharacter(-1);
+        //RespawnCharacter(-1);
 #endif
         RespawnCharacter(1);
         RespawnCharacter(2);
         RespawnCharacter(3);
-        RespawnCharacter(1);
-        RespawnCharacter(2);
-        RespawnCharacter(3);
+        //RespawnCharacter(1);
+        //RespawnCharacter(2);
+        //RespawnCharacter(3);
     }
 
     void PrepareFoods()

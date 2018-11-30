@@ -5,19 +5,19 @@ using UnityEngine;
 public class Head : Body
 {
     Vector3 lastPos;
-    Vector2 lastSize;
+    float lastSize;
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireCube(lastPos, Size);
+        Gizmos.DrawWireSphere(lastPos, Radius);
     }
 
     public bool Move(Vector3 pos)
     {
         Vector3 targetPos = this.transform.position + pos;
-        var colliders = Physics2D.OverlapBoxAll(targetPos, Size, 0);
+        var colliders = Physics2D.OverlapCircleAll(targetPos, Radius);
         lastPos = targetPos;
-        lastSize = Size;
+        lastSize = Radius;
 
         bool pass = true;
         Body attackTarget = null;
@@ -154,11 +154,11 @@ public class Head : Body
         return true;
     }
 
-    void Eat(BoxCollider2D food)
+    void Eat(CircleCollider2D food)
     {
         if (food != null)
         {
-            Debug.Log("Eat food=" + food.size);
+            Debug.Log("Eat food=" + food.radius);
             GameObject.Destroy(food.gameObject);
             var iAdd = food.GetComponent<IAddStrongBody>();
             if (iAdd != null)
