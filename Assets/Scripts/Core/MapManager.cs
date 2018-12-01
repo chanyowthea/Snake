@@ -56,7 +56,9 @@ public class MapManager : MonoBehaviour
 
     void SetSize(Vector2 size)
     {
-        _MapGround.size = size;
+        float factor = 2;
+        _MapGround.size = size / factor;
+        _MapGround.transform.localScale = Vector3.one * factor;
         _MapBG.size = size * 2;
         _Walls[0].transform.position = new Vector3(-size.x / 2f, 0, 0);
         _Walls[0].transform.localScale = new Vector3(1, size.y, 1);

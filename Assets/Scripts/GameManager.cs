@@ -4,11 +4,26 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // -- BUG -- 
+// 在原点重生很多次【在原点被攻击立刻重生】
+// AI停在一个地方不动
+// AI头无法攻击玩家的头了
+// AI追逐无法攻击的玩家，比如同样是总长为3
+// AI没有逃跑
+// 如果在墙壁周围增长，那么尾巴为伸到墙外去
+// AI始终在墙壁周围打转
+// 超出视野不能追逐
+// 追逐有时间，并且超过追逐时间
+// 被攻击立即攻击该对象【判断是否】
+// 随机移动要判断当前移动的位置，随机到另外一边
 
+    // 碰到障碍物重新检测【提前一段距离】
+    // 考虑身体大小
+    // 小路无法通过
+    // 死亡之后的Body层级要改变
+    // 重生的保护时间，10秒
+    // 尾巴增长应该在原地添加尾巴
 
 // logic of artificial intelligence
-// chase
-// wander 
 
 
 //添加障碍物
@@ -20,6 +35,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] Camera _MainCamera;
 
     public GameObject FoodRoot { private set; get; }
+    public GameObject BarrierRoot { private set; get; }
     public int InitBodyLength
     {
         get
@@ -77,6 +93,7 @@ public class GameManager : MonoBehaviour
         Screen.autorotateToPortraitUpsideDown = false;
 
         FoodRoot = new GameObject("FoodRoot");
+        BarrierRoot = new GameObject("BarrierRoot");
         _DelayCallUtil = gameObject.AddComponent<DelayCallUtil>();
         var id = DelayCall(0, DelayLoad);
         _DelayCallIds.Add(id);
@@ -135,6 +152,8 @@ public class GameManager : MonoBehaviour
 
     void PrepareCharacters()
     {
+        PrepareBarriers();
+
         _MainCamera.gameObject.SetActive(false);
         var list = new List<PlayerNameCSV>();
         var csvs = ConfigDataManager.instance.GetDataList<PlayerNameCSV>();
@@ -153,11 +172,19 @@ public class GameManager : MonoBehaviour
         //RespawnCharacter(-1);
 #endif
         RespawnCharacter(1);
-        RespawnCharacter(2);
-        RespawnCharacter(3);
+        //RespawnCharacter(2);
+        //RespawnCharacter(3);
         //RespawnCharacter(1);
         //RespawnCharacter(2);
         //RespawnCharacter(3);
+    }
+
+    void PrepareBarriers()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            RespawnBarrier(1);
+        }
     }
 
     void PrepareFoods()
@@ -280,6 +307,15 @@ public class GameManager : MonoBehaviour
         var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Food);
         food.transform.position = pos;
         food.transform.SetParent(FoodRoot.transform);
+    }
+
+    public void RespawnBarrier(int id)
+    {
+        var go = GameObject.Instantiate(_GameData._BarrierPrefab);
+        //food.SetData(GameManager.instance.GetFoodData(foodId));
+        var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
+        go.transform.position = pos;
+        go.transform.SetParent(BarrierRoot.transform);
     }
 
     public Body RespawnBody()

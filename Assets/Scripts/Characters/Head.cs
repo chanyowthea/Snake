@@ -158,7 +158,7 @@ public class Head : Body
     {
         if (food != null)
         {
-            Debug.Log("Eat food=" + food.radius);
+            //Debug.Log("Eat food=" + food.radius);
             GameObject.Destroy(food.gameObject);
             var iAdd = food.GetComponent<IAddStrongBody>();
             if (iAdd != null)

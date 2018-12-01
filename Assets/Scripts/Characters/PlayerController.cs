@@ -55,7 +55,19 @@ public class PlayerController : BaseCharacter
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 var go = GameObject.Find("Enemy(Clone)"); 
-                go.GetComponent<Enemy>().SetTargetEnemy(null); 
+                go.GetComponent<Enemy>().SetTargetEnemy(null);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                var ls = GameManager.instance.GetCharacters();
+                PlayerController.instance._PlayerCamera.gameObject.SetActive(false);
+                GameObject.Find("Enemy(Clone)").transform.GetChild(0).gameObject.SetActive(true);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha0))
+            {
+                var ls = GameManager.instance.GetCharacters();
+                PlayerController.instance._PlayerCamera.gameObject.SetActive(true);
+                GameObject.Find("Enemy(Clone)").transform.GetChild(0).gameObject.SetActive(false);
             }
             return;
             if (Input.GetKeyDown(KeyCode.D))

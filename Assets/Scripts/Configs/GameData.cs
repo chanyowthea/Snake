@@ -33,4 +33,5 @@ public class GameData : ScriptableObject
     public FoodData[] _Foods;
     public Food _FoodPrefab;
     public Body _BodyPrefab;
+    public Barrier _BarrierPrefab;
 }

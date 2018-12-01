@@ -16,12 +16,7 @@ public class BotFactory : MonoBehaviour
             return _BevTree;
         }
         _BevTree = new TBTActionPrioritizedSelector();
-        _BevTree
-                //.AddChild(new TBTActionSequence()
-                //    .SetPrecondition(new TBTPreconditionNOT(new CON_HasReachedTarget()))
-                //    .AddChild(new NOD_MoveTo())
-                //    )
-                .AddChild(new NOD_MoveTo())
+        _BevTree.AddChild(new NOD_MoveTo())
                 .AddChild(new NodeWander())
             ;
         return _BevTree;
@@ -43,7 +38,7 @@ class CON_HasReachedTarget : TBTPreconditionLeaf
         Vector3 targetPos = thisData._Character.GetTargetPos();
         Vector3 currentPos = thisData._Character.Head.transform.position;
         var dis = Vector3.Distance(targetPos, currentPos);
-        return dis < ConstValue._BodyUnitSize * 0.9f;
+        return dis < ConstValue._BodyUnitSize * 0.02f;
     }
 }
 
@@ -66,7 +61,7 @@ class NOD_MoveTo : TBTActionLeaf
         Vector3 targetPos = thisData._Character.GetTargetPos();
         Vector3 currentPos = thisData._Character.Head.transform.position;
         float distToTarget = Vector3.Distance(targetPos, currentPos);
-        if (distToTarget < ConstValue._BodyUnitSize * 0.9f)
+        if (distToTarget < ConstValue._BodyUnitSize * 0.1f)
         {
             return TBTRunningStatus.FINISHED;
         }
@@ -110,19 +105,33 @@ class NodeWander : TBTActionLeaf
 
     protected override int onExecute(TBTWorkingData wData)
     {
+        return TBTRunningStatus.EXECUTING;
+
         BotWorkingData thisData = wData.As<BotWorkingData>();
         // redirect
-        if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < 0.1f)
+        if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < ConstValue._BodyUnitSize * 0.1f)
         {
             GenerateTargetPos(thisData._Character.Head.transform.position);
         }
         // move to target position. 
         else
         {
-            var rs = thisData._Character.Move(_MoveDir * thisData._Character.MoveSpeed);
-            if (!rs)
+            Vector3 origin = _MoveDir * thisData._Character.MoveSpeed;
+            ; 
+            Vector3[] dirs = new Vector3[]{ 
+                origin,
+                MathUtil.V3RotateAround(origin, -Vector3.forward, 90),
+                MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 2),
+                MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 3)}; 
+            var rs = false;
+            int index = 0; 
+            Vector3 dir = Vector3.zero; 
+            while (!rs && index < dirs.Length)
             {
-                GenerateTargetPos(thisData._Character.Head.transform.position);
+                dir = dirs[index];
+                rs = thisData._Character.Move(_MoveDir * thisData._Character.MoveSpeed);
+                ++index; 
+                //GenerateTargetPos(thisData._Character.Head.transform.position);
             }
         }
 
@@ -138,5 +147,6 @@ class NodeWander : TBTActionLeaf
     {
         _TargetPos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
         _MoveDir = (_TargetPos - curPos).normalized;
+        Debug.DrawLine(curPos, _TargetPos, Color.red, 2); 
     }
 }

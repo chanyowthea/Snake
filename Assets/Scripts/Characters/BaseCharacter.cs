@@ -27,7 +27,8 @@ public class BaseCharacter : MonoBehaviour, IComparable
     {
         get
         {
-            return _MoveSpeed * Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * GameManager.instance.TimeScale;
+            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f) * 
+                GameManager.instance.TimeScale;
         }
         protected set
         {
@@ -147,6 +148,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         {
             return;
         }
+
         PlayerInfo_ = data;
         _CharacterName.SetData(PlayerInfo_._Name);
         Scores = PlayerInfo_._Scores;
@@ -286,18 +288,18 @@ public class BaseCharacter : MonoBehaviour, IComparable
         return result;
     }
 
-    public virtual void SetTargetEnemy(Body value)
+    public virtual void SetTargetEnemy(Transform value)
     {
         if (value != null)
         {
-            Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value._Character));
+            //Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value));
         }
         _Blackboard.SetValue(_TARGET_ENEMY, value);
     }
 
-    public virtual Body GetTargetEnemy()
+    public virtual Transform GetTargetEnemy()
     {
-        return _Blackboard.GetValue<Body>(_TARGET_ENEMY, null);
+        return _Blackboard.GetValue<Transform>(_TARGET_ENEMY, null);
     }
 
     /// <summary>

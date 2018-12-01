@@ -5,13 +5,23 @@ using UnityEngine;
 public class Test0 : MonoBehaviour
 {
     [SerializeField] float MoveSpeed = 0.2f;
-    [SerializeField] CircleCollider2D _Collider; 
+    [SerializeField] CircleCollider2D _Collider;
     void Start()
     {
+
     }
 
     void Update()
     {
+        //// for test
+        //int layer = 0xffff ^ (1 << LayerMask.NameToLayer("Player"));
+        //Debug.LogError("mask=" + layer);
+        //var collider = Physics2D.OverlapBox(lastPos, new Vector2(_Collider.radius * 2, _Collider.radius * 2), 0, layer);
+        //if (collider != null)
+        //{
+        //    Debug.LogError("box!!!");
+        //}
+
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         if (h != 0 || v != 0)
@@ -23,6 +33,7 @@ public class Test0 : MonoBehaviour
     Vector3 lastPos;
     private void OnDrawGizmos()
     {
+        //Gizmos.DrawWireCube(lastPos, new Vector3(_Collider.radius * 2, _Collider.radius * 2, 1));
         Gizmos.DrawWireSphere(lastPos, _Collider.radius * transform.lossyScale.x);
     }
 

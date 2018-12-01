@@ -22,6 +22,7 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public virtual void SetData(BaseCharacter character, int index, Body prev)
     {
+        this.gameObject.layer = character.gameObject.layer;
         _Character = character;
         Index = index;
         _PrevBody = prev;
@@ -52,6 +53,7 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public void Break()
     {
+        this.gameObject.layer = LayerMask.NameToLayer("Default"); 
         _Character = null;
         _PrevBody = null;
         transform.SetParent(GameManager.instance.FoodRoot.transform); 
@@ -70,17 +72,5 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
     public bool IsAddStrongBody()
     {
         return IsStrong;
-    }
-
-    public virtual int Attack()
-    {
-
-        return 0;
-    }
-
-    public virtual int BeAttacked()
-    {
-
-        return 0;
     }
 }
