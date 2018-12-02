@@ -16,7 +16,7 @@ public class BotFactory : MonoBehaviour
             return _BevTree;
         }
         _BevTree = new TBTActionPrioritizedSelector();
-        _BevTree.AddChild(new NOD_MoveTo())
+        _BevTree.AddChild(new NodeChase())
                 .AddChild(new NodeWander())
             ;
         return _BevTree;
@@ -42,12 +42,15 @@ class CON_HasReachedTarget : TBTPreconditionLeaf
     }
 }
 
-class NOD_MoveTo : TBTActionLeaf
+class NodeChase : TBTActionLeaf
 {
+    float _SteerGapTime = 3;
+    float _CurSteerTime;
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        return thisData._Character.GetTargetEnemy() != null; 
+        Debug.Log("GetTargetEnemy() != null=" + (thisData._Character.GetTargetEnemy() != null));
+        return thisData._Character.GetTargetEnemy() != null;
     }
 
     protected override int onExecute(TBTWorkingData wData)
@@ -68,15 +71,26 @@ class NOD_MoveTo : TBTActionLeaf
         else
         {
             int ret = TBTRunningStatus.EXECUTING;
-            Vector3 toTarget = (targetPos - currentPos).normalized * thisData._Character.MoveSpeed;
             float movingStep = thisData._Character.MoveSpeed;
             if (movingStep > distToTarget || thisData._Character.GetTargetEnemy() == null)
             {
                 movingStep = distToTarget;
                 ret = TBTRunningStatus.FINISHED;
             }
-            thisData._Character.Move(toTarget);
-            //Debugger.LogErrorFormat("NOD_MoveTo ret={0},toTarget={1}, targetPos={2}", ret, toTarget, targetPos); 
+            if (_CurSteerTime > 0)
+            {
+                _CurSteerTime -= thisData._DeltaTime;
+            }
+            else
+            {
+                _CurSteerTime = _SteerGapTime;
+                Enemy bot = thisData._Character as Enemy;
+                if (bot != null)
+                {
+                    bot.SteerToTargetPos(targetPos);
+                }
+            }
+            //Debugger.LogErrorFormat("NodeChase ret={0},_CurSteerTime={1}, targetPos={2}", ret, _CurSteerTime, targetPos);
             return ret;
         }
     }
@@ -86,6 +100,8 @@ class NodeWander : TBTActionLeaf
 {
     Vector3 _TargetPos;
     Vector3 _MoveDir;
+    float _SteerGapTime = 3;
+    float _CurSteerTime;
 
     protected override bool onEvaluate(TBTWorkingData wData)
     {
@@ -100,39 +116,50 @@ class NodeWander : TBTActionLeaf
         {
             return;
         }
-        GenerateTargetPos(thisData._Character.Head.transform.position);
+        GenerateTargetPos(thisData._Character.Head.transform.position, wData);
     }
 
     protected override int onExecute(TBTWorkingData wData)
     {
-        return TBTRunningStatus.EXECUTING;
-
         BotWorkingData thisData = wData.As<BotWorkingData>();
         // redirect
         if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < ConstValue._BodyUnitSize * 0.1f)
         {
-            GenerateTargetPos(thisData._Character.Head.transform.position);
+            GenerateTargetPos(thisData._Character.Head.transform.position, wData);
         }
         // move to target position. 
         else
         {
-            Vector3 origin = _MoveDir * thisData._Character.MoveSpeed;
-            ; 
-            Vector3[] dirs = new Vector3[]{ 
-                origin,
-                MathUtil.V3RotateAround(origin, -Vector3.forward, 90),
-                MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 2),
-                MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 3)}; 
-            var rs = false;
-            int index = 0; 
-            Vector3 dir = Vector3.zero; 
-            while (!rs && index < dirs.Length)
+            if (_CurSteerTime > 0)
             {
-                dir = dirs[index];
-                rs = thisData._Character.Move(_MoveDir * thisData._Character.MoveSpeed);
-                ++index; 
-                //GenerateTargetPos(thisData._Character.Head.transform.position);
+                _CurSteerTime -= thisData._DeltaTime;
             }
+            else
+            {
+                Enemy bot = thisData._Character as Enemy;
+                if (bot != null)
+                {
+                    bot.SteerToTargetPos(_TargetPos);
+                }
+            }
+
+            //Vector3 origin = _MoveDir * thisData._Character.MoveSpeed;
+            //;
+            //Vector3[] dirs = new Vector3[]{
+            //    origin,
+            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90),
+            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 2),
+            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 3)};
+            //var rs = false;
+            //int index = 0;
+            //Vector3 dir = Vector3.zero;
+            //while (!rs && index < dirs.Length)
+            //{
+            //    dir = dirs[index];
+            //    rs = thisData._Character.Move(_MoveDir * thisData._Character.MoveSpeed);
+            //    ++index;
+            //    //GenerateTargetPos(thisData._Character.Head.transform.position);
+            //}
         }
 
         (thisData._Character as Enemy).CheckEnemy();
@@ -143,10 +170,11 @@ class NodeWander : TBTActionLeaf
         return TBTRunningStatus.EXECUTING;
     }
 
-    void GenerateTargetPos(Vector3 curPos)
+    void GenerateTargetPos(Vector3 curPos, TBTWorkingData wData)
     {
-        _TargetPos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
-        _MoveDir = (_TargetPos - curPos).normalized;
-        Debug.DrawLine(curPos, _TargetPos, Color.red, 2); 
+        BotWorkingData thisData = wData.As<BotWorkingData>();
+        _TargetPos = MapManager.instance.GetRandPosInRect(
+            MathUtil.GetNextRandomRect(_TargetPos, thisData._Character.VisualField, thisData._Character.Head.Radius));
+        Debug.DrawLine(curPos, _TargetPos, Color.red, 1);
     }
 }

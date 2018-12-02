@@ -18,100 +18,98 @@ public class PathFindingUtil
         }
     }
     BaseCharacter _Character;
+    Vector3 _TargetPos;
+    List<Vector3> _PathList;
+    bool _IsInSteer;
+    static bool _IsGenBaseMatrix; 
 
     public void SetData(BaseCharacter character)
     {
         _Character = character;
         _GridSize = 0.25f;
-        // TODO size needs to be power of 2. 
+
+        // size needs to be power of 2. 
         _Matrix = new byte[256, 256];
         ResetMap();
         _PathFinder = new PathFinderFast(_Matrix);
         _PathFinder.Formula = HeuristicFormula.Manhattan; //使用我个人觉得最快的曼哈顿A*算法
         _PathFinder.SearchLimit = 2000; //即移动经过方块(20*20)不大于2000个(简单理解就是步数)
-        DrawGrid();
-        //GameManager.instance.DelayCall(3,DrawGrid, true);
+
+        // reset the map every one minute. 
         GameManager.instance.DelayCall(1, ResetMap, true);
     }
 
-    void DrawGrid()
+    // for test
+    //public void DrawGrid()
+    //{
+    //    _Grids.Clear();
+    //    for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
+    //    {
+    //        for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
+    //        {
+    //            if (_Matrix[x, y] == 0)
+    //            {
+    //                var pos = ConvertVector3(new PathFinderNode { X = x, Y = y });
+    //                _Grids.Add(new Rect(pos.x - _GridSize / 2f, pos.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
+    //            }
+    //        }
+    //    }
+    //    var pos1 = ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
+    //    _Grids.Add(new Rect(pos1.x - _GridSize / 2f, pos1.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
+    //}
+
+    //List<Rect> _Grids = new List<Rect>();
+    //public void OnDrawGizmos()
+    //{
+    //    _Grids.ForEach((r) =>
+    //    {
+    //        Grid.DrawRect(r, Color.green);
+    //    });
+    //}
+
+    public void SteerToTargetPos(Vector3 pos)
     {
-        _Grids.Clear();
-        // for test
-        for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
+        //var p = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
+        _PathList = FindPath(_Character.Head.transform.position, pos);
+        _IsInSteer = true;
+        _TargetPos = Vector3.zero;
+        _PathList.Reverse();
+        if (_PathList.Count > 0)
         {
-            for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
-            {
-                if (_Matrix[x, y] == 0)
-                {
-                    var pos = ConvertVector3(new PathFinderNode { X = x, Y = y });
-                    _Grids.Add(new Rect(pos.x - _GridSize / 2f, pos.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-                }
-            }
+            _TargetPos = _PathList[0];
         }
-        var pos1 = ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
-        _Grids.Add(new Rect(pos1.x - _GridSize / 2f, pos1.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-    }
-
-    List<Rect> _Grids = new List<Rect>();
-    Vector3 _TargetPos;
-    Enemy enemy;
-    List<Vector3> _PathList;
-
-    public void OnDrawGizmos()
-    {
-        _Grids.ForEach((r) =>
-        {
-            Grid.DrawRect(r, Color.green);
-        });
     }
 
     public void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (!_IsInSteer || _PathList == null)
         {
-            if (enemy == null)
-            {
-                enemy = GameObject.Find("Enemy(Clone)").GetComponent<Enemy>();
-            }
-            var p = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
-            int x = Mathf.RoundToInt(p.x / _GridSize);
-            int y = Mathf.RoundToInt(p.y / _GridSize);
-
-            _PathList = FindPath(enemy.Head.transform.position, p);
-            if (_PathList != null && _PathList.Count > 0)
-            {
-                string s = "path: ";
-                for (int i = 0, length = _PathList.Count; i < length; i++)
-                {
-                    s += "node=" + _PathList[i] + ", ";
-                }
-                Debug.LogError(s);
-            }
-            _TargetPos = Vector3.zero;
-            _PathList.Reverse();
-            if (_PathList.Count > 0)
-            {
-                _TargetPos = _PathList[0];
-            }
+            return;
         }
 
-        if (enemy != null && _PathList != null && _PathList.Count > 0)
+        if (_PathList.Count > 0)
         {
-            if (Vector3.Distance(_TargetPos, enemy.Head.transform.position) < 0.1f)
+            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < 0.1f)
             {
-                _TargetPos = Vector3.zero;
                 _PathList.RemoveAt(0);
                 if (_PathList.Count > 0)
                 {
                     _TargetPos = _PathList[0];
                 }
             }
-            if (_TargetPos != Vector3.zero)
+        }
+
+        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= 0.1f)
+        {
+            var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed;
+            _Character.Move(motion);
+        }
+        // has reach the final destination?
+        else
+        {
+            if (_PathList.Count == 0)
             {
-                var _MoveDir = _TargetPos - enemy.Head.transform.position;
-                var motion = _MoveDir.normalized * enemy.MoveSpeed;
-                enemy.Move(motion);
+                _IsInSteer = false;
             }
         }
     }
@@ -132,16 +130,10 @@ public class PathFindingUtil
                 {
                     _Matrix[x, y] = 0;
                 }
-                //默认值可以通过在矩阵中用1表示
                 else
                 {
+                    // set default value. indicates a pass road
                     _Matrix[x, y] = 1;
-
-                    // for test
-                    //if (x >= 40 && x <= 160 && y <= 160 && y >= 40)
-                    //{
-                    //    _Matrix[x, y] = 0;
-                    //}
 
                     var barrier = Physics2D.OverlapBox(ConvertVector3FromGrid(x, y), Vector2.one * _GridSize, 0,
                         LayerMask.GetMask("Barrier"));
@@ -153,7 +145,7 @@ public class PathFindingUtil
                     {
                         // TODO 待优化，可以写成逐个Body检测
                         // 并先生成一个BaseMatrix
-                        var cs = Physics2D.OverlapBoxAll(ConvertVector3FromGrid(x, y), 
+                        var cs = Physics2D.OverlapBoxAll(ConvertVector3FromGrid(x, y),
                             Vector2.one * _Character.Head.Radius * 2, 0);
                         if (cs != null && cs.Length > 0)
                         {

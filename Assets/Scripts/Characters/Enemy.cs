@@ -25,10 +25,10 @@ public class Enemy : BaseCharacter
         GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3), CharacterUniqueID);
     }
 
-    bool _DrawGizmo;
+    //bool _DrawGizmo;
     void Update()
     {
-        _DrawGizmo = Input.GetKey(KeyCode.G);
+        //_DrawGizmo = Input.GetKey(KeyCode.G);
         _PathUtil.Update();
         UpdateBehavior(GameManager.instance.GameTime, GameManager.instance.DeltaTime);
     }
@@ -48,14 +48,8 @@ public class Enemy : BaseCharacter
         return 0;
     }
 
-    // 寻路【A星】
-    // 碰撞停止了之后的转弯
-    // 吃食物
-    // 
     public void CheckEnemy()
     {
-        return;
-
         var colliders = Physics2D.OverlapCircleAll(this.Head.transform.position, VisualField);
         float minDis = float.MaxValue;
         Body target = null;
@@ -206,13 +200,19 @@ public class Enemy : BaseCharacter
         }
     }
 
+    public void SteerToTargetPos(Vector3 pos)
+    {
+        _PathUtil.SteerToTargetPos(pos);
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(this.Head.transform.position, VisualField);
-        if (_DrawGizmo)
-        {
-            _PathUtil.ResetMap(); 
-            _PathUtil.OnDrawGizmos();
-        }
+        //if (_DrawGizmo)
+        //{
+        //    _PathUtil.ResetMap();
+        //    _PathUtil.DrawGrid();
+        //    _PathUtil.OnDrawGizmos();
+        //}
     }
 }

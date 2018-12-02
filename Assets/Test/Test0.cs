@@ -8,7 +8,8 @@ public class Test0 : MonoBehaviour
     [SerializeField] CircleCollider2D _Collider;
     void Start()
     {
-
+        Debug.Log("rs=" + (Mathf.RoundToInt(-0.6f)));
+        Debug.Log("rs=" + (Mathf.CeilToInt(-0.6f)));
     }
 
     void Update()

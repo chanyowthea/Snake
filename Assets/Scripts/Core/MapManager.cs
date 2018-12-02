@@ -29,6 +29,12 @@ public class MapManager : MonoBehaviour
         SetSize(CurMapSize);
     }
 
+    public bool IsInMap(Vector3 pos, float headSize = ConstValue._BodyUnitSize)
+    {
+        return pos.x < CurMapSize.x / 2f - headSize && pos.x > -CurMapSize.x / 2f + headSize
+            && pos.y < CurMapSize.y / 2f - headSize && pos.y > -CurMapSize.y / 2f + headSize;
+    }
+
     public Vector3 GetRandPosInCurMap(int offsetX = 0, int offsetY = 0)
     {
         int x = RandomUtil.instance.Next(
@@ -37,6 +43,17 @@ public class MapManager : MonoBehaviour
         int y = RandomUtil.instance.Next(
             (int)(-MapManager.instance.CurMapSize.y / 2f) + offsetX,
             (int)(MapManager.instance.CurMapSize.y / 2f) - offsetX);
+        return new Vector3(x, y, 0);
+    }
+
+    public Vector3 GetRandPosInRect(Rect rect, float headSize = ConstValue._BodyUnitSize)
+    {
+        int x = RandomUtil.instance.Next(
+            Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.x / 2f + headSize, rect.x - rect.width / 2f)),
+            Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.x / 2f - headSize, rect.x + rect.width / 2f)));
+        int y = RandomUtil.instance.Next(
+            Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.y / 2f + headSize, rect.y - rect.height / 2f)),
+            Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.y / 2f - headSize, rect.y + rect.height / 2f)));
         return new Vector3(x, y, 0);
     }
 
