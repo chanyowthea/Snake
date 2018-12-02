@@ -10,6 +10,7 @@ public class PlayerInfo
     public string _Name;
     public int _Scores;
     public PlayerData _PlayerData;
+    public Vector3 _BirthPos;
 }
 
 public class RunTimeData : TSingleton<RunTimeData>

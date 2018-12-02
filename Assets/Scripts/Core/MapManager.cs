@@ -22,7 +22,7 @@ public class MapManager : MonoBehaviour
 
     [SerializeField] SpriteRenderer _MapGround;
     [SerializeField] SpriteRenderer _MapBG;
-    [SerializeField] GameObject[] _Walls;
+    [SerializeField] BoxCollider2D[] _Walls;
 
     private void Start()
     {
@@ -31,8 +31,8 @@ public class MapManager : MonoBehaviour
 
     public bool IsInMap(Vector3 pos, float headSize = ConstValue._BodyUnitSize)
     {
-        return pos.x < CurMapSize.x / 2f - headSize && pos.x > -CurMapSize.x / 2f + headSize
-            && pos.y < CurMapSize.y / 2f - headSize && pos.y > -CurMapSize.y / 2f + headSize;
+        return pos.x < CurMapSize.x / 2f - headSize / 2f && pos.x > -CurMapSize.x / 2f + headSize / 2f
+            && pos.y < CurMapSize.y / 2f - headSize / 2f && pos.y > -CurMapSize.y / 2f + headSize / 2f;
     }
 
     public Vector3 GetRandPosInCurMap(int offsetX = 0, int offsetY = 0)
@@ -48,21 +48,53 @@ public class MapManager : MonoBehaviour
 
     public Vector3 GetRandPosInRect(Rect rect, float headSize = ConstValue._BodyUnitSize)
     {
-        int x = RandomUtil.instance.Next(
-            Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.x / 2f + headSize, rect.x - rect.width / 2f)),
-            Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.x / 2f - headSize, rect.x + rect.width / 2f)));
-        int y = RandomUtil.instance.Next(
-            Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.y / 2f + headSize, rect.y - rect.height / 2f)),
-            Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.y / 2f - headSize, rect.y + rect.height / 2f)));
-        return new Vector3(x, y, 0);
+        // check valid
+        Vector3 pos = Vector3.zero;
+        bool findValidPos = false;
+        int xMin = Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.x / 2f + headSize / 2f, rect.x - rect.width / 2f));
+        int xMax = Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.x / 2f - headSize / 2f, rect.x + rect.width / 2f));
+        int yMin = Mathf.CeilToInt(Mathf.Max(-MapManager.instance.CurMapSize.y / 2f + headSize / 2f, rect.y - rect.height / 2f));
+        int yMax = Mathf.FloorToInt(Mathf.Min(MapManager.instance.CurMapSize.y / 2f - headSize / 2f, rect.y + rect.height / 2f));
+        for (int i = 0; i < ConstValue._MaxLoopTime; i++)
+        {
+            pos.x = RandomUtil.instance.Next(xMin,xMax);
+            pos.y = RandomUtil.instance.Next(yMin, yMax);
+            var c = Physics2D.OverlapCircle(pos, ConstValue._BodyUnitSize, 0xffff ^ LayerMask.GetMask("Food"));
+            if (c == null)
+            {
+                findValidPos = true;
+                break;
+            }
+        }
+        if (!findValidPos)
+        {
+            Debugger.LogError("cannot find a valid position! ");
+        }
+        return pos;
     }
 
     public Vector3 GetRandPosInCurMap(ESpawnType type)
     {
         if (type == ESpawnType.Character)
         {
-            return GetRandPosInCurMap(GameManager.instance.InitBodyLength + 1,
-                GameManager.instance.InitBodyLength + 1);
+            Vector3 pos = Vector3.zero;
+            bool findValidPos = false;
+            for (int i = 0; i < ConstValue._MaxLoopTime; i++)
+            {
+                pos = GetRandPosInCurMap(GameManager.instance.InitBodyLength + 1,
+                    GameManager.instance.InitBodyLength + 1);
+                var c = Physics2D.OverlapCircle(pos, ConstValue._BodyUnitSize, 0xffff ^ LayerMask.GetMask("Food"));
+                if (c == null)
+                {
+                    findValidPos = true;
+                    break;
+                }
+            }
+            if (!findValidPos)
+            {
+                Debugger.LogError("cannot find a valid position! ");
+            }
+            return pos;
         }
         else if (type == ESpawnType.Food)
         {
@@ -77,13 +109,14 @@ public class MapManager : MonoBehaviour
         _MapGround.size = size / factor;
         _MapGround.transform.localScale = Vector3.one * factor;
         _MapBG.size = size * 2;
-        _Walls[0].transform.position = new Vector3(-size.x / 2f, 0, 0);
-        _Walls[0].transform.localScale = new Vector3(1, size.y, 1);
-        _Walls[1].transform.position = new Vector3(size.x / 2f, 0, 0);
-        _Walls[1].transform.localScale = new Vector3(1, size.y, 1);
-        _Walls[2].transform.position = new Vector3(0, -size.y / 2f, 0);
-        _Walls[2].transform.localScale = new Vector3(size.x, 1, 1);
-        _Walls[3].transform.position = new Vector3(0, size.y / 2f, 0);
-        _Walls[3].transform.localScale = new Vector3(size.x, 1, 1);
+        int defaultWidth = 1;
+        _Walls[0].transform.position = new Vector3(-size.x / 2f - defaultWidth / 2f, 0, 0);
+        _Walls[0].transform.localScale = new Vector3(defaultWidth, size.y, defaultWidth);
+        _Walls[1].transform.position = new Vector3(size.x / 2f + defaultWidth / 2f, 0, 0);
+        _Walls[1].transform.localScale = new Vector3(defaultWidth, size.y, defaultWidth);
+        _Walls[2].transform.position = new Vector3(0, -size.y / 2f - defaultWidth / 2f, 0);
+        _Walls[2].transform.localScale = new Vector3(size.x, defaultWidth, defaultWidth);
+        _Walls[3].transform.position = new Vector3(0, size.y / 2f + defaultWidth / 2f, 0);
+        _Walls[3].transform.localScale = new Vector3(size.x, defaultWidth, defaultWidth);
     }
 }

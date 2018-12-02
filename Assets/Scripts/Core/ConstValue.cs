@@ -4,6 +4,7 @@ using UnityEngine;
 
 public static class ConstValue
 {
+    // game value
     /// <summary>
     /// default ratio of strong body length. 
     /// </summary>
@@ -17,4 +18,13 @@ public static class ConstValue
     public const int _ScoreUnit = 1;
     public const float _KillScoresRatio = 0.2f;
     public const float _BodyUnitSize = 0.5f;
+    public const float _MinMoveDelta = _BodyUnitSize * 0.1f;
+    public const float _DefaultBaseMoveSpeed = 0.1f;
+
+    // render value
+    public const int _FoodMaskSortingLayer = 400;
+    public const int _BodyMaskSortingLayer = 900;
+
+    // system value
+    public const int _MaxLoopTime = 100;
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class Body : MonoBehaviour, IScore, IAddStrongBody
 {
     [SerializeField] protected SpriteRenderer _Sprite;
-    [SerializeField] protected CircleCollider2D _Collider; 
+    [SerializeField] protected CircleCollider2D _Collider;
     protected Body _PrevBody;
     public BaseCharacter _Character { protected set; get; }
 
@@ -22,7 +22,7 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public virtual void SetData(BaseCharacter character, int index, Body prev)
     {
-        this.gameObject.layer = character.gameObject.layer;
+        SetMask("Body");
         _Character = character;
         Index = index;
         _PrevBody = prev;
@@ -53,10 +53,23 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public void Break()
     {
-        this.gameObject.layer = LayerMask.NameToLayer("Default"); 
+        SetMask("Food");
         _Character = null;
         _PrevBody = null;
-        transform.SetParent(GameManager.instance.FoodRoot.transform); 
+        transform.SetParent(GameManager.instance.FoodRoot.transform);
+    }
+
+    public void SetMask(string maskName)
+    {
+        this.gameObject.layer = LayerMask.NameToLayer(maskName);
+        if (maskName == "Food")
+        {
+            _Sprite.sortingOrder = ConstValue._FoodMaskSortingLayer;
+        }
+        else if (maskName == "Body")
+        {
+            _Sprite.sortingOrder = ConstValue._BodyMaskSortingLayer;
+        }
     }
 
     public CircleCollider2D GetCollider()
@@ -66,7 +79,7 @@ public class Body : MonoBehaviour, IScore, IAddStrongBody
 
     public virtual float GetScore()
     {
-        return IsStrong ? ConstValue._StrongBodyScores : ConstValue._OneBodyScores; 
+        return IsStrong ? ConstValue._StrongBodyScores : ConstValue._OneBodyScores;
     }
 
     public bool IsAddStrongBody()

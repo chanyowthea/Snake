@@ -19,9 +19,12 @@ public class PathFindingUtil
     }
     BaseCharacter _Character;
     Vector3 _TargetPos;
+    Vector3 _FinalTargetPos;
     List<Vector3> _PathList;
-    bool _IsInSteer;
-    static bool _IsGenBaseMatrix; 
+    public bool _IsInSteer { private set; get; }
+    static bool _IsGenBaseMatrix;
+    const byte _GRID_ROAD = 1;
+    const byte _GRID_BARRIER = 0;
 
     public void SetData(BaseCharacter character)
     {
@@ -30,58 +33,78 @@ public class PathFindingUtil
 
         // size needs to be power of 2. 
         _Matrix = new byte[256, 256];
-        ResetMap();
+        GenBaseMatrix();
+        ResetDynamicBarriers();
         _PathFinder = new PathFinderFast(_Matrix);
         _PathFinder.Formula = HeuristicFormula.Manhattan; //使用我个人觉得最快的曼哈顿A*算法
         _PathFinder.SearchLimit = 2000; //即移动经过方块(20*20)不大于2000个(简单理解就是步数)
 
         // reset the map every one minute. 
-        GameManager.instance.DelayCall(1, ResetMap, true);
+        //GameManager.instance.DelayCall(1, ResetDynamicBarriers, true);
     }
 
-    // for test
-    //public void DrawGrid()
-    //{
-    //    _Grids.Clear();
-    //    for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
-    //    {
-    //        for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
-    //        {
-    //            if (_Matrix[x, y] == 0)
-    //            {
-    //                var pos = ConvertVector3(new PathFinderNode { X = x, Y = y });
-    //                _Grids.Add(new Rect(pos.x - _GridSize / 2f, pos.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-    //            }
-    //        }
-    //    }
-    //    var pos1 = ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
-    //    _Grids.Add(new Rect(pos1.x - _GridSize / 2f, pos1.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-    //}
+    public void ClearData()
+    {
+        if (_IsGenBaseMatrix)
+        {
+            _IsGenBaseMatrix = false;
+        }
+    }
 
-    //List<Rect> _Grids = new List<Rect>();
-    //public void OnDrawGizmos()
-    //{
-    //    _Grids.ForEach((r) =>
-    //    {
-    //        Grid.DrawRect(r, Color.green);
-    //    });
-    //}
+#if UNITY_EDITOR
+    List<Rect> _Grids = new List<Rect>();
+    //for test
+    public void DrawGrid()
+    {
+        _Grids.Clear();
+        for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
+        {
+            for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
+            {
+                if (_Matrix[x, y] == _GRID_BARRIER)
+                {
+                    var pos = ConvertVector3(new PathFinderNode { X = x, Y = y });
+                    _Grids.Add(new Rect(pos.x - _GridSize / 2f, pos.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
+                }
+            }
+        }
+        var pos1 = ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
+        _Grids.Add(new Rect(pos1.x - _GridSize / 2f, pos1.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
+    }
+
+    public void OnDrawGizmos()
+    {
+        _Grids.ForEach((r) =>
+        {
+            Grid.DrawRect(r, Color.green);
+        });
+    }
+#endif
 
     public void SteerToTargetPos(Vector3 pos)
     {
-        //var p = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
+        _FinalTargetPos = pos;
         _PathList = FindPath(_Character.Head.transform.position, pos);
-        _IsInSteer = true;
-        _TargetPos = Vector3.zero;
-        _PathList.Reverse();
-        if (_PathList.Count > 0)
+        if (_PathList != null)
         {
-            _TargetPos = _PathList[0];
+            _IsInSteer = true;
+            _PathList.Reverse();
+            if (_PathList.Count > 0)
+            {
+                _PathList.RemoveAt(0);
+            }
+            _PathList.Add(_FinalTargetPos);
+            if (_PathList.Count > 0)
+            {
+                _TargetPos = _PathList[0];
+            }
         }
+        //Debugger.LogError(LogUtil.GetCurMethodName() + "_TargetPos=" + _TargetPos + ", headPos=" + _Character.Head.transform.position);
     }
 
     public void Update()
     {
+        ResetDynamicBarriers();
         if (!_IsInSteer || _PathList == null)
         {
             return;
@@ -89,7 +112,7 @@ public class PathFindingUtil
 
         if (_PathList.Count > 0)
         {
-            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < 0.1f)
+            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < ConstValue._MinMoveDelta)
             {
                 _PathList.RemoveAt(0);
                 if (_PathList.Count > 0)
@@ -99,14 +122,15 @@ public class PathFindingUtil
             }
         }
 
-        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= 0.1f)
+        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= ConstValue._MinMoveDelta)
         {
             var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed;
-            _Character.Move(motion);
+            bool rs = _Character.Move(motion);
         }
         // has reach the final destination?
         else
         {
+            //Debugger.LogError("has reach the final destination!!!");
             if (_PathList.Count == 0)
             {
                 _IsInSteer = false;
@@ -116,11 +140,12 @@ public class PathFindingUtil
 
     public void GenBaseMatrix()
     {
+        if (_IsGenBaseMatrix)
+        {
+            return;
+        }
+        _IsGenBaseMatrix = true;
 
-    }
-
-    public void ResetMap()
-    {
         for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
         {
             for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
@@ -128,43 +153,85 @@ public class PathFindingUtil
                 // the point of out map is forbidden. 
                 if (x >= (int)(CurMapSize.x / _GridSize) || y >= (int)(CurMapSize.y / _GridSize))
                 {
-                    _Matrix[x, y] = 0;
+                    _Matrix[x, y] = _GRID_BARRIER;
                 }
                 else
                 {
-                    // set default value. indicates a pass road
-                    _Matrix[x, y] = 1;
-
                     var barrier = Physics2D.OverlapBox(ConvertVector3FromGrid(x, y), Vector2.one * _GridSize, 0,
                         LayerMask.GetMask("Barrier"));
                     if (barrier != null)
                     {
-                        _Matrix[x, y] = 0;
+                        _Matrix[x, y] = _GRID_BARRIER;
                     }
                     else
                     {
-                        // TODO 待优化，可以写成逐个Body检测
-                        // 并先生成一个BaseMatrix
-                        var cs = Physics2D.OverlapBoxAll(ConvertVector3FromGrid(x, y),
-                            Vector2.one * _Character.Head.Radius * 2, 0);
-                        if (cs != null && cs.Length > 0)
+                        // set default value. indicates a pass road
+                        _Matrix[x, y] = _GRID_ROAD;
+                    }
+                }
+            }
+        }
+    }
+
+    List<Point2D> _PrevBarrierGrids = new List<Point2D>();
+    public void ResetDynamicBarriers()
+    {
+        // clear dynamic barriers. 
+        int xMaxBound = _Matrix.GetUpperBound(0);
+        int yMaxBound = _Matrix.GetUpperBound(1);
+        for (int i = 0, length = _PrevBarrierGrids.Count; i < length; i++)
+        {
+            var grid = _PrevBarrierGrids[i];
+            _Matrix[grid.X, grid.Y] = _GRID_ROAD;
+        }
+
+        var characters = GameManager.instance.GetCharacters();
+        float headSize = _Character.Head.Radius * 2;
+        float bodySize = ConstValue._BodyUnitSize;
+        float maxMoveDelta = ConstValue._DefaultBaseMoveSpeed * GameManager.instance.TimeScale;
+        for (int i = 0, length = characters.Count; i < length; i++)
+        {
+            var character = characters[i];
+            if (character == this._Character)
+            {
+                continue;
+            }
+            if (_Character.BodyLength < 1)
+            {
+                Debugger.LogError("_Character.BodyLength < 1");
+            }
+            else
+            {
+                bodySize = _Character.GetBody(0).Radius * 2;
+            }
+
+            for (int j = 0, max = character.BodyLength; j < max; j++)
+            {
+                var body = character.GetBody(j);
+                if (!body.IsStrong)
+                {
+                    continue;
+                }
+
+                var pos = body.transform.position;
+                // grid in this rectange cannot be reached. 
+                Rect rect = new Rect(pos.x, pos.y, bodySize + headSize + maxMoveDelta * 2, bodySize + headSize + maxMoveDelta * 2);
+                Point2D bottomLeft = ConvertPoint2D(new Vector3(rect.x - rect.width / 2f, rect.y - rect.height / 2f));
+                Point2D topRight = ConvertPoint2D(new Vector3(rect.x + rect.width / 2f, rect.y + rect.height / 2f));
+                int xMin = Mathf.Clamp(bottomLeft.X, 0, xMaxBound);
+                int xMax = Mathf.Clamp(topRight.X, 0, xMaxBound);
+                int yMin = Mathf.Clamp(bottomLeft.Y, 0, yMaxBound);
+                int yMax = Mathf.Clamp(topRight.Y, 0, yMaxBound);
+                //Debug.LogErrorFormat("xMin={0}, xMax={1}, yMin={2}, yMax={3}, origin={4}",
+                //xMin, xMax, yMin, yMax, pos);
+                for (int y = yMin; y <= yMax; y++)
+                {
+                    for (int x = xMin; x <= xMax; x++)
+                    {
+                        if (_Matrix[x, y] == _GRID_ROAD)
                         {
-                            for (int i = 0, length = cs.Length; i < length; i++)
-                            {
-                                var collider = cs[i];
-                                var body = collider.GetComponent<Body>();
-                                if (body != null && body._Character != null && body._Character != this._Character)
-                                {
-                                    if (body is Head && body._Character.TotalLength >= _Character.TotalLength)
-                                    {
-                                        _Matrix[x, y] = 0;
-                                    }
-                                    else if (body.IsStrong)
-                                    {
-                                        _Matrix[x, y] = 0;
-                                    }
-                                }
-                            }
+                            _Matrix[x, y] = _GRID_BARRIER;
+                            _PrevBarrierGrids.Add(new Point2D(x, y));
                         }
                     }
                 }

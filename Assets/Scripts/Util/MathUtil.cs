@@ -17,24 +17,32 @@ public class MathUtil
         return q * source;// 返回目标点
     }
 
-    public static Rect GetNextRandomRect(Vector3 prevPoint, float sideLength, float headSize = ConstValue._BodyUnitSize)
+    public static Rect GetNextRandomRect(Vector3 curPoint, float sideLength, float headSize = ConstValue._BodyUnitSize)
     {
         // x,y is the center of this rectangle. 
-        float signx = Mathf.Sign(prevPoint.x);
-        float signy = Mathf.Sign(prevPoint.y);
-        Vector2[] signs = new Vector2[]{ new Vector2(-signx, -signy), new Vector2(-signx, signy) ,
-            new Vector2(signx, -signy),new Vector2(signx, signy)};
-        Rect rect = new Rect();
-        for (int i = 0, length = signs.Length; i < length; i++)
+        Rect rect = new Rect(0, 0, sideLength, sideLength);
+        float x = float.MaxValue;
+        float y = float.MaxValue;
+        bool getPos = false;
+        for (int i = 0; i < ConstValue._MaxLoopTime; i++)
         {
-            float x = prevPoint.x + signs[i].x * sideLength;
-            float y = prevPoint.y + signs[i].y * sideLength;
-            if (MapManager.instance.IsInMap(new Vector3(x, y), headSize))
+            if (!MapManager.instance.IsInMap(new Vector3(x, y), headSize))
             {
-                rect = new Rect(x, y, sideLength, sideLength);
+                x = curPoint.x + RandomUtil.instance.Next(-1, 2) * sideLength;
+                y = curPoint.y + RandomUtil.instance.Next(-1, 2) * sideLength;
+            }
+            else
+            {
+                getPos = true;
                 break;
             }
         }
-        return rect;// 返回目标点
+        if (!getPos)
+        {
+            Debug.LogError("does not get target pos! ");
+            x = y = 0;
+        }
+        rect = new Rect(x, y, sideLength, sideLength);
+        return rect;
     }
 }

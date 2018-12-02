@@ -27,7 +27,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
     {
         get
         {
-            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f) * 
+            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f) *
                 GameManager.instance.TimeScale;
         }
         protected set
@@ -154,6 +154,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         Scores = PlayerInfo_._Scores;
         MoveSpeed = PlayerInfo_._PlayerData._MoveSpeed;
         Head.SetData(this, 0, null);
+        Head.transform.position = data._BirthPos;
         for (int i = 0; i < initBodyLength; i++)
         {
             AddBody();
@@ -292,7 +293,16 @@ public class BaseCharacter : MonoBehaviour, IComparable
     {
         if (value != null)
         {
-            //Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", value.name, value));
+            if (value.GetComponent<Body>() != null)
+            {
+                Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", 
+                    value.name, value.GetComponent<Body>()._Character));
+            }
+            Debugger.Log(string.Format("SetTargetEnemy value={0}, pos={1}", value.name, value.transform.position));
+        }
+        else
+        {
+            Debugger.Log(LogUtil.GetCurMethodName() + ", null");
         }
         _Blackboard.SetValue(_TARGET_ENEMY, value);
     }

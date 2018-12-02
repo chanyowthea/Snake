@@ -8,12 +8,26 @@ public class Test0 : MonoBehaviour
     [SerializeField] CircleCollider2D _Collider;
     void Start()
     {
-        Debug.Log("rs=" + (Mathf.RoundToInt(-0.6f)));
-        Debug.Log("rs=" + (Mathf.CeilToInt(-0.6f)));
+
     }
 
+    public static Vector3 V3RotateAround(Vector3 source, Vector3 axis, float angle)
+    {
+        Quaternion q = Quaternion.AngleAxis(angle, axis);// 旋转系数
+        return q * source;// 返回目标点
+    }
+
+    int _Times;
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ++_Times;
+            Vector3 pos = V3RotateAround(this.transform.right, -Vector3.forward, 90); 
+            Debug.Log("pos=" + pos);
+            this.transform.right = pos.normalized;
+        }
+
         //// for test
         //int layer = 0xffff ^ (1 << LayerMask.NameToLayer("Player"));
         //Debug.LogError("mask=" + layer);

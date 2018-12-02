@@ -16,15 +16,17 @@ using UnityEngine;
 // 被攻击立即攻击该对象【判断是否】
 // 随机移动要判断当前移动的位置，随机到另外一边
 
-    // 死亡之后的Body层级要改变
-    // 重生的保护时间，10秒
-    // 尾巴增长应该在原地添加尾巴
-    // 重生要检测降生位置是否有障碍物
-    // 墙壁应该放到外面去
-    // 寻路，在某个区域检测
-    // 为什么不优先攻击少于自己的敌方的头部
-    // 吃红色的食物加分有问题
-    // AI偶尔会出现没有目标的情况
+// 死亡之后的Body层级要改变
+// 重生的保护时间，10秒
+// 尾巴增长应该在原地添加尾巴
+// 重生要检测降生位置是否有障碍物
+// 墙壁应该放到外面去
+// 寻路，在某个区域检测
+// 为什么不优先攻击少于自己的敌方的头部
+// 吃红色的食物加分有问题
+// AI偶尔会出现没有目标的情况
+// 人玩家会卡住了电脑玩家[应该要家motion的计算]
+// 超出视野仍然追逐
 
 // logic of artificial intelligence
 
@@ -145,6 +147,7 @@ public class GameManager : MonoBehaviour
     void DelayLoad()
     {
         _ActionQueue.Enqueue(PrepareResource);
+        _ActionQueue.Enqueue(PrepareBarriers);
         _ActionQueue.Enqueue(PrepareCharacters);
         _ActionQueue.Enqueue(PrepareUI);
         for (int i = 0; i < 10; i++)
@@ -155,8 +158,6 @@ public class GameManager : MonoBehaviour
 
     void PrepareCharacters()
     {
-        PrepareBarriers();
-
         _MainCamera.gameObject.SetActive(false);
         var list = new List<PlayerNameCSV>();
         var csvs = ConfigDataManager.instance.GetDataList<PlayerNameCSV>();
@@ -184,7 +185,7 @@ public class GameManager : MonoBehaviour
 
     void PrepareBarriers()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 30; i++)
         {
             RespawnBarrier(1);
         }
@@ -234,9 +235,8 @@ public class GameManager : MonoBehaviour
         if (characterId < 0)
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
+            player.transform.position = Vector3.zero;
             player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
-            var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
-            player.transform.position = pos;
             _Characters.Add(player);
             return player;
         }
@@ -244,17 +244,16 @@ public class GameManager : MonoBehaviour
         if (characterId != 0)
         {
             var enemy = GameObject.Instantiate(_GameData._EnemyPrefab);
+            enemy.transform.position = Vector3.zero;
             enemy.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
-            var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
-            enemy.transform.position = pos;
             _Characters.Add(enemy);
             return enemy;
         }
         else
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
-            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             player.transform.position = Vector3.zero;
+            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             _Characters.Add(player);
             return player;
         }
@@ -269,6 +268,8 @@ public class GameManager : MonoBehaviour
             playerInfo = RunTimeData.instance.GetPlayerInfo(uniqueID);
             playerInfo._UniqueID = uniqueID;
             playerInfo._Name = GetRandomName();
+            var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
+            playerInfo._BirthPos = pos;
             playerInfo._PlayerData = GameManager.instance.GetPlayerData(characterId);
         }
         else
@@ -318,6 +319,7 @@ public class GameManager : MonoBehaviour
         //food.SetData(GameManager.instance.GetFoodData(foodId));
         var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
         go.transform.position = pos;
+        go.transform.localScale = new Vector3(RandomUtil.instance.Next(1, 5), RandomUtil.instance.Next(1, 5), 1);
         go.transform.SetParent(BarrierRoot.transform);
     }
 
