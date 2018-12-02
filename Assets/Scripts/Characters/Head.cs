@@ -6,10 +6,8 @@ public class Head : Body
 {
     Vector3 _LastPos;
     int _ChangeDirTimes = 0;
-    //Vector3 _Pos0;
-    bool _TurnRight;
     Vector3 _Motion0;
-    Vector3[] _StandardDirs = new Vector3[] { Vector3.right, Vector3.up, Vector3.left, Vector3.down };
+    bool _TurnRight;
 
     private void OnDrawGizmos()
     {
@@ -82,77 +80,49 @@ public class Head : Body
             this.transform.position += pos;
             this.transform.right = pos.normalized;
             _ChangeDirTimes = 0;
-            if (_Character.CharacterID == 0)
-                Debugger.LogRed(string.Format("if (pass) pass={0}, times={1}, pos={2}", pass, _ChangeDirTimes, pos));
+            //Debugger.LogBlue("pass pos=" + pos);
         }
         else
         {
-            //if (_ChangeDirTimes == 0)
-            //{
-            //    Vector3 dir = Vector3.zero;
-            //    int rs = (int)(Mathf.Abs(pos.x) - Mathf.Abs(pos.y));
-            //    if (rs > 0)
-            //    {
-            //        dir = new Vector3(1 * Mathf.Sign(pos.x), 0, 0);
-            //    }
-            //    else if (rs < 0)
-            //    {
-            //        dir = new Vector3(0, 1 * Mathf.Sign(pos.y), 0);
-            //    }
-            //    else
-            //        { 
+            if (_ChangeDirTimes == 0)
+            {
+                Vector3 dir = Vector3.zero;
+                int rs = (int)(Mathf.Abs(pos.x) - Mathf.Abs(pos.y));
+                if (rs > 0)
+                {
+                    dir = new Vector3(1 * Mathf.Sign(pos.x), 0, 0);
+                }
+                else if (rs < 0)
+                {
+                    dir = new Vector3(0, 1 * Mathf.Sign(pos.y), 0);
+                }
+                else
+                {
+                    dir = _TurnRight ? new Vector3(1 * Mathf.Sign(pos.x), 0, 0) : new Vector3(0, 1 * Mathf.Sign(pos.y), 0);
+                }
+                _Motion0 = pos.magnitude * dir.normalized;
+                //Debugger.LogGreen("Motion=" + _Motion0);
+            }
+            _ChangeDirTimes += 1;
+            // left and right only. 
+            if (_ChangeDirTimes == 1)
+            {
+                pass = Move(_Motion0);
+            }
+            else if (_ChangeDirTimes >= 2 && _ChangeDirTimes < 4)
+            {
+                // while the _ChangeDirTimes == 1 is failed. 
+                if (_ChangeDirTimes == 3)
+                {
+                    _TurnRight = !_TurnRight;
+                }
 
-            //        }
-            //    _Pos0 = pos.magnitude * dir;
-            //    Debugger.LogBlue("Pos0=" + _Pos0);
-            //}
-            //_ChangeDirTimes += 1;
-            //// left and right only. 
-            //if (_ChangeDirTimes == 1)
-            //{
-            //    pass = Move(_Pos0);
-            //}
-            //else if (_ChangeDirTimes >= 2 && _ChangeDirTimes < 4)
-            //{
-            //    if (_Character.CharacterID == 0)
-            //        Debugger.LogGreen(string.Format("pass={0}, times={1}, pos={2}", pass, _ChangeDirTimes, MathUtil.V3RotateAround(_Pos0, -Vector3.forward, -90 * (_ChangeDirTimes - 2 == 0 ? 1 : -1))));
-            //    //pass = Move(_StandardDirs[_ChangeDirTimes - 4]);
-            //    pass = Move(MathUtil.V3RotateAround(_Pos0, -Vector3.forward, -90 * (_ChangeDirTimes - 2 == 0 ? 1 : -1)));
-            //}
-
-            // turn direction method. 
-            //if (_ChangeDirTimes == 0)
-            //{
-            //    _Motion0 = pos; 
-            //}
-            //    _ChangeDirTimes += 1;
-            //// left and right only. 
-            //if (_ChangeDirTimes >= 1 && _ChangeDirTimes < 3)
-            //{
-            //    // while the _ChangeDirTimes == 1 is failed. 
-            //    if (_ChangeDirTimes == 2)
-            //    {
-            //        _TurnRight = !_TurnRight;
-            //    }
-
-            //    if (_Character.CharacterID == 0)
-            //        Debugger.LogRed(string.Format("_ChangeDirTimes >= 1 pass={0}, times={1}, pos={2}", 
-            //            pass, _ChangeDirTimes, MathUtil.V3RotateAround(_Motion0, -Vector3.forward,
-            //        -90 * (_TurnRight ? 1 : -1))));
-            //    // clockwise
-            //    pass = Move(MathUtil.V3RotateAround(_Motion0, -Vector3.forward,
-            //        -90 * (_TurnRight ? 1 : -1)));
-            //}
-
-            //else if (_ChangeDirTimes >= 3 && _ChangeDirTimes < 5)
-            //{
-            //    if (_Character.CharacterID == 0)
-            //        Debugger.LogRed(string.Format("_ChangeDirTimes >= 4 pass={0}, times={1}, pos={2}", pass, _ChangeDirTimes, pos));
-            //    //pass = Move(_StandardDirs[_ChangeDirTimes - 4]);
-            //    pos = Mathf.Abs(pos.x) > Mathf.Abs(pos.y) ?
-            //        new Vector3(1 * Mathf.Sign(pos.x), 0, 0) : new Vector3(0, 1 * Mathf.Sign(pos.y), 0);
-            //    pass = Move(MathUtil.V3RotateAround(pos, -Vector3.forward, -90));
-            //}
+                if (_Character.CharacterID != 0)
+                    Debugger.LogGreen(string.Format("pass={0}, times={1}, pos={2}", pass,
+                        _ChangeDirTimes,
+                        MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1))));
+                pass = Move(MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1)));
+            }
             else
             {
                 pass = false;

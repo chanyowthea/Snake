@@ -152,7 +152,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         PlayerInfo_ = data;
         _CharacterName.SetData(PlayerInfo_._Name);
         Scores = PlayerInfo_._Scores;
-        MoveSpeed = PlayerInfo_._PlayerData._MoveSpeed;
+        MoveSpeed = ConstValue._DefaultBaseMoveSpeed;
         Head.SetData(this, 0, null);
         Head.transform.position = data._BirthPos;
         for (int i = 0; i < initBodyLength; i++)

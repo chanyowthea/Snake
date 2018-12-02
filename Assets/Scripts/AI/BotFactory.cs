@@ -136,7 +136,7 @@ class NodeWander : TBTActionLeaf
     protected override void onEnter(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         GenerateTargetPos(thisData._Character.Head.transform.position, wData);
     }
 
@@ -149,8 +149,8 @@ class NodeWander : TBTActionLeaf
     protected override int onExecute(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //Debugger.LogErrorFormat("dis={0}, delta={1}",
-        //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta);
+        Debugger.LogErrorFormat("dis={0}, delta={1}",
+        Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta);
         // redirect
         if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < ConstValue._MinMoveDelta)
         {
@@ -160,7 +160,7 @@ class NodeWander : TBTActionLeaf
         // move to target position. 
         else
         {
-            //Debugger.LogGreen("curtime=" + _CurSteerTime);
+            Debugger.LogGreen("curtime=" + _CurSteerTime);
             if (_CurSteerTime > 0)
             {
                 _CurSteerTime -= thisData._DeltaTime;

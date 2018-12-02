@@ -25,8 +25,7 @@ using UnityEngine;
 // 为什么不优先攻击少于自己的敌方的头部
 // 吃红色的食物加分有问题
 // AI偶尔会出现没有目标的情况
-// 人玩家会卡住了电脑玩家[应该要家motion的计算]
-// 超出视野仍然追逐
+
 
 // logic of artificial intelligence
 
