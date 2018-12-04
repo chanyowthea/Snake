@@ -5,9 +5,9 @@ using UnityEngine;
 public class Head : Body
 {
     Vector3 _LastPos;
-    int _ChangeDirTimes = 0;
-    Vector3 _Motion0;
-    bool _TurnRight;
+    //int _ChangeDirTimes = 0;
+    //Vector3 _Motion0;
+    //bool _TurnRight;
 
     private void OnDrawGizmos()
     {
@@ -117,10 +117,10 @@ public class Head : Body
                     _TurnRight = !_TurnRight;
                 }
 
-                if (_Character.CharacterID != 0)
-                    Debugger.LogGreen(string.Format("pass={0}, times={1}, pos={2}", pass,
-                        _ChangeDirTimes,
-                        MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1))));
+                //if (_Character.CharacterID != 0)
+                //    Debugger.LogGreen(string.Format("pass={0}, times={1}, pos={2}", pass,
+                        //_ChangeDirTimes,
+                        //MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1))));
                 pass = Move(MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1)));
             }
             else

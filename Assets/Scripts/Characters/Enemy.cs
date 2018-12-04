@@ -7,7 +7,7 @@ public class Enemy : BaseCharacter
 {
     private TBTAction _BevTree;
     private BotWorkingData _BevWorkingData;
-    PathFindingUtil _PathUtil;
+    BotPathUtil _PathUtil;
     public override void SetData(PlayerInfo data, int initBodyLength)
     {
         _BevTree = BotFactory.GetBehaviourTree();
@@ -15,9 +15,8 @@ public class Enemy : BaseCharacter
         _BevWorkingData._Character = this;
         base.SetData(data, initBodyLength);
 
-        _PathUtil = new PathFindingUtil();
+        _PathUtil = this.gameObject.AddComponent<BotPathUtil>(); 
         _PathUtil.SetData(this);
-
     }
 
     public override void Die()
@@ -25,23 +24,23 @@ public class Enemy : BaseCharacter
         base.Die();
         GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3), CharacterUniqueID);
     }
-
-#if UNITY_EDITOR
-    bool _DrawGizmo;
-#endif
+    
     void Update()
     {
 #if UNITY_EDITOR
-        _DrawGizmo = Input.GetKey(KeyCode.G);
         if (Input.GetMouseButtonDown(1))
         {
             var targetPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
             _PathUtil.SteerToTargetPos(targetPos);
         }
 #endif
-        _PathUtil.Update();
         UpdateBehavior(GameManager.instance.GameTime, GameManager.instance.DeltaTime);
     }
+
+    //public override void AddBody(bool isStrong = false)
+    //{
+
+    //}
 
     public int UpdateBehavior(float gameTime, float deltaTime)
     {
@@ -119,21 +118,21 @@ public class Enemy : BaseCharacter
 
         // find path for body
         var bodyPath = new List<Vector3>();
-        Vector3[] bodyOffsets = new Vector3[]{new Vector3(0, 0),
-                new Vector3(1, 0),new Vector3(-1, 0),new Vector3(0, 1),new Vector3(0, -1)};
         for (int i = 0, length = bodies.Count; i < length; i++)
         {
             var body = bodies[i];
             bool findFath = false;
-            for (int j = 0, max = bodyOffsets.Length; j < max; j++)
+            var ps = body.GetAllChasePoints();
+            for (int j = 0, max = ps.Count; j < max; j++)
             {
-                var offset = bodyOffsets[j];
-                var tempPath = _PathUtil.FindPath(this.Head.transform.position, body.transform.position + offset);
+                var point = ps[j];
+                var tempPath = _PathUtil.FindPath(this.Head.transform.position, point.position);
                 if (tempPath != null && tempPath.Count > 0)
                 {
                     target = body;
                     bodyPath = tempPath;
-                    minDis = Vector3.Distance(this.Head.transform.position, body.transform.position);
+                    minDis = Vector3.Distance(this.Head.transform.position, point.position);
+                    body._CurChasePoint = point; 
                     break;
                 }
             }
@@ -236,12 +235,6 @@ public class Enemy : BaseCharacter
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(this.Head.transform.position, VisualField);
-        if (_DrawGizmo)
-        {
-            _PathUtil.ResetDynamicBarriers();
-            _PathUtil.DrawGrid();
-            _PathUtil.OnDrawGizmos();
-        }
     }
 #endif
 }

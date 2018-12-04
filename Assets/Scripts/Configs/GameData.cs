@@ -8,7 +8,6 @@ public class PlayerData
 {
     public int _ID; 
     public Color _BodyColor = Color.blue;
-    public float _MoveSpeed = 0.1f;
 }
 
 [Serializable]
@@ -17,16 +16,11 @@ public class FoodData
     public int _ID;
     public Color _Color = Color.blue;
     public int _Scores;
-    
-    // TODO
     public bool _IsAddStrongBody; 
 }
 
 public class GameData : ScriptableObject
 {
-    [Tooltip("minutes of a race")]
-    public int _RaceTime; // minutes
-    public int _InitBodyLength = 3; 
     public PlayerData[] _Players;
     public Enemy _EnemyPrefab;
     public PlayerController _PlayerPrefab;

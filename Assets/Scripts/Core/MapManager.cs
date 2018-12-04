@@ -73,6 +73,11 @@ public class MapManager : MonoBehaviour
         return pos;
     }
 
+    public Vector3 GetValidRandPosInCurMap(float headSize = ConstValue._BodyUnitSize)
+    {
+        return GetRandPosInRect(new Rect(0, 0, CurMapSize.x - 1, CurMapSize.y - 1), headSize);
+    }
+
     public Vector3 GetRandPosInCurMap(ESpawnType type)
     {
         if (type == ESpawnType.Character)
@@ -81,8 +86,7 @@ public class MapManager : MonoBehaviour
             bool findValidPos = false;
             for (int i = 0; i < ConstValue._MaxLoopTime; i++)
             {
-                pos = GetRandPosInCurMap(GameManager.instance.InitBodyLength + 1,
-                    GameManager.instance.InitBodyLength + 1);
+                pos = GetRandPosInCurMap(ConstValue._DefaultBodyLength + 1, ConstValue._DefaultBodyLength + 1);
                 var c = Physics2D.OverlapCircle(pos, ConstValue._BodyUnitSize, 0xffff ^ LayerMask.GetMask("Food"));
                 if (c == null)
                 {

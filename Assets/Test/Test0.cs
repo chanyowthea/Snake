@@ -8,7 +8,6 @@ public class Test0 : MonoBehaviour
     [SerializeField] CircleCollider2D _Collider;
     void Start()
     {
-
     }
 
     public static Vector3 V3RotateAround(Vector3 source, Vector3 axis, float angle)
@@ -17,15 +16,15 @@ public class Test0 : MonoBehaviour
         return q * source;// 返回目标点
     }
 
-    int _Times;
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ++_Times;
-            Vector3 pos = V3RotateAround(this.transform.right, -Vector3.forward, 90); 
-            Debug.Log("pos=" + pos);
-            this.transform.right = pos.normalized;
+            float angle = Vector3.Angle(Vector3.right, this.transform.right) * (this.transform.right.y > 0 ? 1 : -1);
+            Debug.Log("angle=" + angle);
+            var offset = Vector3.up;
+            offset = MathUtil.V3RotateAround(offset, -Vector3.forward, -angle);
+            Debug.Log("offset=" + offset);
         }
 
         //// for test

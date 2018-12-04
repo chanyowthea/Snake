@@ -201,7 +201,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         else
         {
             var b = _Bodies[_Bodies.Count - 1];
-            body.transform.position = b.transform.position + -b.transform.right * body.Radius * 2;
+            body.transform.position = b.transform.position; // + -b.transform.right * body.Radius * 2;
         }
         body.SetData(this, _Bodies.Count, _Bodies.Count == 0 ? _Head : _Bodies[_Bodies.Count - 1]);
         _Bodies.Add(body);
@@ -295,14 +295,14 @@ public class BaseCharacter : MonoBehaviour, IComparable
         {
             if (value.GetComponent<Body>() != null)
             {
-                Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}", 
-                    value.name, value.GetComponent<Body>()._Character));
+                //Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}",
+                    //value.name, value.GetComponent<Body>()._Character));
             }
-            Debugger.Log(string.Format("SetTargetEnemy value={0}, pos={1}", value.name, value.transform.position));
+            //Debugger.Log(string.Format("SetTargetEnemy value={0}, pos={1}", value.name, value.transform.position));
         }
         else
         {
-            Debugger.Log(LogUtil.GetCurMethodName() + ", null");
+            //Debugger.Log(LogUtil.GetCurMethodName() + ", null");
         }
         _Blackboard.SetValue(_TARGET_ENEMY, value);
     }
@@ -336,6 +336,11 @@ public class BaseCharacter : MonoBehaviour, IComparable
         if (enemy == null)
         {
             return _Blackboard.GetValue<Vector3>(_TARGET_POS, Vector3.zero);
+        }
+        var body = enemy.GetComponent<Body>();
+        if (body != null)
+        {
+            return body._CurChasePoint.position;
         }
         return enemy.transform.position;
     }

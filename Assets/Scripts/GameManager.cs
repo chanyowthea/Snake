@@ -40,13 +40,6 @@ public class GameManager : MonoBehaviour
 
     public GameObject FoodRoot { private set; get; }
     public GameObject BarrierRoot { private set; get; }
-    public int InitBodyLength
-    {
-        get
-        {
-            return _GameData._InitBodyLength;
-        }
-    }
     DelayCallUtil _DelayCallUtil;
     List<uint> _DelayCallIds = new List<uint>();
     Queue<Action> _ActionQueue = new Queue<Action>();
@@ -99,8 +92,13 @@ public class GameManager : MonoBehaviour
         FoodRoot = new GameObject("FoodRoot");
         BarrierRoot = new GameObject("BarrierRoot");
         _DelayCallUtil = gameObject.AddComponent<DelayCallUtil>();
+        Singleton._DelayUtil = gameObject.AddComponent<DelayCallUtil>();
+        PrepareBarriers();
+        Singleton._PathUtil = gameObject.AddComponent<PathFindingUtil>();
         var id = DelayCall(0, DelayLoad);
         _DelayCallIds.Add(id);
+
+        DelayCall(3, PrepareFoods, true);
     }
 
     private void OnDestroy()
@@ -146,7 +144,6 @@ public class GameManager : MonoBehaviour
     void DelayLoad()
     {
         _ActionQueue.Enqueue(PrepareResource);
-        _ActionQueue.Enqueue(PrepareBarriers);
         _ActionQueue.Enqueue(PrepareCharacters);
         _ActionQueue.Enqueue(PrepareUI);
         for (int i = 0; i < 10; i++)
@@ -172,12 +169,12 @@ public class GameManager : MonoBehaviour
         }
         RespawnCharacter(0);
 #if UNITY_EDITOR
-        //RespawnCharacter(-1);
+        RespawnCharacter(-1);
 #endif
         RespawnCharacter(1);
-        //RespawnCharacter(2);
-        //RespawnCharacter(3);
-        //RespawnCharacter(1);
+        RespawnCharacter(2);
+        RespawnCharacter(3);
+        RespawnCharacter(1);
         //RespawnCharacter(2);
         //RespawnCharacter(3);
     }
@@ -252,7 +249,7 @@ public class GameManager : MonoBehaviour
         {
             var player = GameObject.Instantiate(_GameData._PlayerPrefab);
             player.transform.position = Vector3.zero;
-            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
+            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength * 2);
             _Characters.Add(player);
             return player;
         }
@@ -307,7 +304,7 @@ public class GameManager : MonoBehaviour
     {
         var food = GameObject.Instantiate(_GameData._FoodPrefab);
         food.SetData(GameManager.instance.GetFoodData(foodId));
-        var pos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Food);
+        var pos = MapManager.instance.GetValidRandPosInCurMap();
         food.transform.position = pos;
         food.transform.SetParent(FoodRoot.transform);
     }
@@ -342,6 +339,6 @@ public class GameManager : MonoBehaviour
 
     public float GetRaceEndTime()
     {
-        return GameTime + _GameData._RaceTime * 60;
+        return GameTime + ConstValue._RaceTime0 * 60;
     }
 }

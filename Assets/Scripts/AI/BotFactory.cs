@@ -44,8 +44,8 @@ class CON_HasReachedTarget : TBTPreconditionLeaf
 
 class NodeChase : TBTActionLeaf
 {
-    float _SteerGapTime = 3;
-    float _CurSteerTime;
+    //float _SteerGapTime = 3;
+    //float _CurSteerTime;
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
@@ -69,7 +69,7 @@ class NodeChase : TBTActionLeaf
 
     protected override void onExit(TBTWorkingData wData, int runningStatus)
     {
-        _CurSteerTime = 0;
+        //_CurSteerTime = 0;
         base.onExit(wData, runningStatus);
     }
 
@@ -81,7 +81,7 @@ class NodeChase : TBTActionLeaf
         float distToTarget = Vector3.Distance(targetPos, currentPos);
         if (distToTarget < ConstValue._MinMoveDelta)
         {
-            _CurSteerTime = 0;
+            //_CurSteerTime = 0;
             return TBTRunningStatus.FINISHED;
         }
         else if (distToTarget > thisData._Character.VisualField)
@@ -105,7 +105,7 @@ class NodeChase : TBTActionLeaf
             //}
             //else
             {
-                _CurSteerTime = _SteerGapTime;
+                //_CurSteerTime = _SteerGapTime;
                 Enemy bot = thisData._Character as Enemy;
                 Debug.DrawLine(currentPos, targetPos, Color.green, 1);
                 if (bot != null)
@@ -122,7 +122,6 @@ class NodeChase : TBTActionLeaf
 class NodeWander : TBTActionLeaf
 {
     Vector3 _TargetPos;
-    Vector3 _MoveDir;
     float _SteerGapTime = 3;
     float _CurSteerTime;
 
@@ -136,7 +135,7 @@ class NodeWander : TBTActionLeaf
     protected override void onEnter(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        //Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         GenerateTargetPos(thisData._Character.Head.transform.position, wData);
     }
 
@@ -149,8 +148,8 @@ class NodeWander : TBTActionLeaf
     protected override int onExecute(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        Debugger.LogErrorFormat("dis={0}, delta={1}",
-        Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta);
+        //Debugger.LogErrorFormat("dis={0}, delta={1}",
+        //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta);
         // redirect
         if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < ConstValue._MinMoveDelta)
         {
@@ -160,12 +159,12 @@ class NodeWander : TBTActionLeaf
         // move to target position. 
         else
         {
-            Debugger.LogGreen("curtime=" + _CurSteerTime);
-            if (_CurSteerTime > 0)
-            {
-                _CurSteerTime -= thisData._DeltaTime;
-            }
-            else
+            //Debugger.LogGreen("curtime=" + _CurSteerTime);
+            //if (_CurSteerTime > 0)
+            //{
+            //    _CurSteerTime -= thisData._DeltaTime;
+            //}
+            //else
             {
                 _CurSteerTime = _SteerGapTime;
                 Enemy bot = thisData._Character as Enemy;
@@ -174,24 +173,6 @@ class NodeWander : TBTActionLeaf
                     bot.SteerToTargetPos(_TargetPos);
                 }
             }
-
-            //Vector3 origin = _MoveDir * thisData._Character.MoveSpeed;
-            //;
-            //Vector3[] dirs = new Vector3[]{
-            //    origin,
-            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90),
-            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 2),
-            //    MathUtil.V3RotateAround(origin, -Vector3.forward, 90 * 3)};
-            //var rs = false;
-            //int index = 0;
-            //Vector3 dir = Vector3.zero;
-            //while (!rs && index < dirs.Length)
-            //{
-            //    dir = dirs[index];
-            //    rs = thisData._Character.Move(_MoveDir * thisData._Character.MoveSpeed);
-            //    ++index;
-            //    //GenerateTargetPos(thisData._Character.Head.transform.position);
-            //}
         }
 
         var player = (thisData._Character as Enemy);

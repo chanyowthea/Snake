@@ -49,12 +49,13 @@ public class PlayerController : BaseCharacter
             float v = Input.GetAxisRaw("Vertical");
             if (h != 0 || v != 0)
             {
-                Move(new Vector3(h, v, 0).normalized * MoveSpeed);
+                Debug.Log("x=" + h + ", y=" + v);
+                Move(new Vector3(h, v, 0).normalized * MoveSpeed * GameManager.instance.DeltaTime);
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                var go = GameObject.Find("Enemy(Clone)"); 
+                var go = GameObject.Find("Enemy(Clone)");
                 go.GetComponent<Enemy>().SetTargetEnemy(null);
             }
             if (Input.GetKeyDown(KeyCode.Alpha1))
@@ -72,19 +73,19 @@ public class PlayerController : BaseCharacter
             return;
             if (Input.GetKeyDown(KeyCode.D))
             {
-                Move(new Vector3(1, 0, 0) * MoveSpeed);
+                Move(new Vector3(1, 0, 0) * MoveSpeed * GameManager.instance.DeltaTime);
             }
             if (Input.GetKeyDown(KeyCode.A))
             {
-                Move(new Vector3(-1, 0, 0) * MoveSpeed);
+                Move(new Vector3(-1, 0, 0) * MoveSpeed * GameManager.instance.DeltaTime);
             }
             if (Input.GetKeyDown(KeyCode.S))
             {
-                Move(new Vector3(0, -1, 0) * MoveSpeed);
+                Move(new Vector3(0, -1, 0) * MoveSpeed * GameManager.instance.DeltaTime);
             }
             if (Input.GetKeyDown(KeyCode.W))
             {
-                Move(new Vector3(0, 1, 0) * MoveSpeed);
+                Move(new Vector3(0, 1, 0) * MoveSpeed * GameManager.instance.DeltaTime);
             }
         }
         else
@@ -93,7 +94,7 @@ public class PlayerController : BaseCharacter
             float v = Input.GetAxisRaw("Vertical1");
             if (h != 0 || v != 0)
             {
-                Move(new Vector3(h, v, 0).normalized * MoveSpeed);
+                Move(new Vector3(h, v, 0).normalized * MoveSpeed * GameManager.instance.DeltaTime);
             }
         }
     }
@@ -102,14 +103,23 @@ public class PlayerController : BaseCharacter
     {
         if (pos.x != 0 || pos.y != 0)
         {
-            Move(new Vector3(pos.x, pos.y, 0).normalized * MoveSpeed);
+            Debug.Log("pos.x=" + pos.x + ", pos.y=" + pos.y);
+            if (pos.x != 0)
+            {
+                pos.x = Mathf.Sign(pos.x) * 1;
+            }
+            if (pos.y != 0)
+            {
+                pos.y = Mathf.Sign(pos.y) * 1;
+            }
+            Move(new Vector3(pos.x, pos.y, 0).normalized * MoveSpeed * GameManager.instance.DeltaTime);
         }
     }
 
     public override void Die()
     {
         base.Die();
-        instance = null; 
+        instance = null;
         GameManager.instance.RespawnCharacter(CharacterID, CharacterUniqueID);
     }
 }

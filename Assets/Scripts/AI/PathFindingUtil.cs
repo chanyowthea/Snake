@@ -4,148 +4,51 @@ using UnityEngine;
 using Components.AStar;
 using Components.Struct;
 
-public class PathFindingUtil
+public class PathFindingUtil : MonoBehaviour
 {
-    private byte[,] _Matrix;
+    // recaculate matrix every frame. but only run once in one frame even if there are several players. 
+    public byte[,] _Matrix { private set; get; }
+    // caculate only once after enter the map. 
     private byte[,] _BaseMatrix;
-    private float _GridSize = 0.25f;
     private IPathFinder _PathFinder;
-    Vector2 CurMapSize
+    public Vector2 CurMapSize
     {
         get
         {
             return MapManager.instance.CurMapSize;
         }
     }
-    BaseCharacter _Character;
-    Vector3 _TargetPos;
-    Vector3 _FinalTargetPos;
-    List<Vector3> _PathList;
-    public bool _IsInSteer { private set; get; }
-    static bool _IsGenBaseMatrix;
-    const byte _GRID_ROAD = 1;
-    const byte _GRID_BARRIER = 0;
 
-    public void SetData(BaseCharacter character)
+    public const float _GridSize = 0.25f;
+    public const byte _GRID_ROAD = 1;
+    public const byte _GRID_BARRIER = 0;
+    public int _XMaxBound;
+    public int _YMaxBound;
+    bool _HasResetDynamicBarriersInThisFrame;
+
+    void Start()
     {
-        _Character = character;
-        _GridSize = 0.25f;
-
         // size needs to be power of 2. 
         _Matrix = new byte[256, 256];
         GenBaseMatrix();
-        ResetDynamicBarriers();
         _PathFinder = new PathFinderFast(_Matrix);
         _PathFinder.Formula = HeuristicFormula.Manhattan; //使用我个人觉得最快的曼哈顿A*算法
         _PathFinder.SearchLimit = 2000; //即移动经过方块(20*20)不大于2000个(简单理解就是步数)
+        // clear dynamic barriers. 
+        _XMaxBound = _Matrix.GetUpperBound(0);
+        _YMaxBound = _Matrix.GetUpperBound(1);
 
         // reset the map every one minute. 
         //GameManager.instance.DelayCall(1, ResetDynamicBarriers, true);
     }
 
-    public void ClearData()
+    private void Update()
     {
-        if (_IsGenBaseMatrix)
-        {
-            _IsGenBaseMatrix = false;
-        }
-    }
-
-#if UNITY_EDITOR
-    List<Rect> _Grids = new List<Rect>();
-    //for test
-    public void DrawGrid()
-    {
-        _Grids.Clear();
-        for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
-        {
-            for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
-            {
-                if (_Matrix[x, y] == _GRID_BARRIER)
-                {
-                    var pos = ConvertVector3(new PathFinderNode { X = x, Y = y });
-                    _Grids.Add(new Rect(pos.x - _GridSize / 2f, pos.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-                }
-            }
-        }
-        var pos1 = ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
-        _Grids.Add(new Rect(pos1.x - _GridSize / 2f, pos1.y - _GridSize / 2f, _GridSize * 0.8f, _GridSize * 0.8f));
-    }
-
-    public void OnDrawGizmos()
-    {
-        _Grids.ForEach((r) =>
-        {
-            Grid.DrawRect(r, Color.green);
-        });
-    }
-#endif
-
-    public void SteerToTargetPos(Vector3 pos)
-    {
-        _FinalTargetPos = pos;
-        _PathList = FindPath(_Character.Head.transform.position, pos);
-        if (_PathList != null)
-        {
-            _IsInSteer = true;
-            _PathList.Reverse();
-            if (_PathList.Count > 0)
-            {
-                _PathList.RemoveAt(0);
-            }
-            _PathList.Add(_FinalTargetPos);
-            if (_PathList.Count > 0)
-            {
-                _TargetPos = _PathList[0];
-            }
-        }
-        //Debugger.LogError(LogUtil.GetCurMethodName() + "_TargetPos=" + _TargetPos + ", headPos=" + _Character.Head.transform.position);
-    }
-
-    public void Update()
-    {
-        ResetDynamicBarriers();
-        if (!_IsInSteer || _PathList == null)
-        {
-            return;
-        }
-
-        if (_PathList.Count > 0)
-        {
-            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < ConstValue._MinMoveDelta)
-            {
-                _PathList.RemoveAt(0);
-                if (_PathList.Count > 0)
-                {
-                    _TargetPos = _PathList[0];
-                }
-            }
-        }
-
-        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= ConstValue._MinMoveDelta)
-        {
-            var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed;
-            bool rs = _Character.Move(motion);
-        }
-        // has reach the final destination?
-        else
-        {
-            //Debugger.LogError("has reach the final destination!!!");
-            if (_PathList.Count == 0)
-            {
-                _IsInSteer = false;
-            }
-        }
+        _HasResetDynamicBarriersInThisFrame = false;
     }
 
     public void GenBaseMatrix()
     {
-        if (_IsGenBaseMatrix)
-        {
-            return;
-        }
-        _IsGenBaseMatrix = true;
-
         for (int y = 0; y < _Matrix.GetUpperBound(1); y++)
         {
             for (int x = 0; x < _Matrix.GetUpperBound(0); x++)
@@ -173,38 +76,28 @@ public class PathFindingUtil
         }
     }
 
-    List<Point2D> _PrevBarrierGrids = new List<Point2D>();
+    float _MaxMoveDelta = 0; // ConstValue._DefaultBaseMoveSpeed * GameManager.instance.TimeScale;
+    float _HeadSize = ConstValue._BodyUnitSize;
+    float _BodySize = ConstValue._BodyUnitSize;
+    public List<Point2D> _PrevBarrierGrids = new List<Point2D>();
     public void ResetDynamicBarriers()
     {
-        // clear dynamic barriers. 
-        int xMaxBound = _Matrix.GetUpperBound(0);
-        int yMaxBound = _Matrix.GetUpperBound(1);
+        if (_HasResetDynamicBarriersInThisFrame)
+        {
+            return;
+        }
+
         for (int i = 0, length = _PrevBarrierGrids.Count; i < length; i++)
         {
             var grid = _PrevBarrierGrids[i];
             _Matrix[grid.X, grid.Y] = _GRID_ROAD;
         }
+        _PrevBarrierGrids.Clear();
 
         var characters = GameManager.instance.GetCharacters();
-        float headSize = _Character.Head.Radius * 2;
-        float bodySize = ConstValue._BodyUnitSize;
-        float maxMoveDelta = ConstValue._DefaultBaseMoveSpeed * GameManager.instance.TimeScale;
         for (int i = 0, length = characters.Count; i < length; i++)
         {
             var character = characters[i];
-            if (character == this._Character)
-            {
-                continue;
-            }
-            if (_Character.BodyLength < 1)
-            {
-                Debugger.LogError("_Character.BodyLength < 1");
-            }
-            else
-            {
-                bodySize = _Character.GetBody(0).Radius * 2;
-            }
-
             for (int j = 0, max = character.BodyLength; j < max; j++)
             {
                 var body = character.GetBody(j);
@@ -215,13 +108,13 @@ public class PathFindingUtil
 
                 var pos = body.transform.position;
                 // grid in this rectange cannot be reached. 
-                Rect rect = new Rect(pos.x, pos.y, bodySize + headSize + maxMoveDelta * 2, bodySize + headSize + maxMoveDelta * 2);
+                Rect rect = new Rect(pos.x, pos.y, _BodySize + _HeadSize + _MaxMoveDelta * 2, _BodySize + _HeadSize + _MaxMoveDelta * 2);
                 Point2D bottomLeft = ConvertPoint2D(new Vector3(rect.x - rect.width / 2f, rect.y - rect.height / 2f));
                 Point2D topRight = ConvertPoint2D(new Vector3(rect.x + rect.width / 2f, rect.y + rect.height / 2f));
-                int xMin = Mathf.Clamp(bottomLeft.X, 0, xMaxBound);
-                int xMax = Mathf.Clamp(topRight.X, 0, xMaxBound);
-                int yMin = Mathf.Clamp(bottomLeft.Y, 0, yMaxBound);
-                int yMax = Mathf.Clamp(topRight.Y, 0, yMaxBound);
+                int xMin = Mathf.Clamp(bottomLeft.X, 0, _XMaxBound);
+                int xMax = Mathf.Clamp(topRight.X, 0, _XMaxBound);
+                int yMin = Mathf.Clamp(bottomLeft.Y, 0, _YMaxBound);
+                int yMax = Mathf.Clamp(topRight.Y, 0, _YMaxBound);
                 //Debug.LogErrorFormat("xMin={0}, xMax={1}, yMin={2}, yMax={3}, origin={4}",
                 //xMin, xMax, yMin, yMax, pos);
                 for (int y = yMin; y <= yMax; y++)
@@ -255,19 +148,19 @@ public class PathFindingUtil
         return result;
     }
 
-    Point2D ConvertPoint2D(Vector3 pos)
+    public Point2D ConvertPoint2D(Vector3 pos)
     {
         pos.x += MapManager.instance.CurMapSize.x / 2f - _GridSize / 2f;
         pos.y += MapManager.instance.CurMapSize.y / 2f - _GridSize / 2f;
         return new Point2D(Mathf.RoundToInt(pos.x / _GridSize), Mathf.RoundToInt(pos.y / _GridSize));
     }
 
-    Vector3 ConvertVector3(PathFinderNode point)
+    public Vector3 ConvertVector3(PathFinderNode point)
     {
         return ConvertVector3FromGrid(point.X, point.Y);
     }
 
-    Vector3 ConvertVector3FromGrid(int x, int y)
+    public Vector3 ConvertVector3FromGrid(int x, int y)
     {
         Vector3 pos = new Vector3();
         pos.x = x * _GridSize - MapManager.instance.CurMapSize.x / 2f + _GridSize / 2f;
