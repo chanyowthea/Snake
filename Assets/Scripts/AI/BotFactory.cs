@@ -57,8 +57,8 @@ class NodeChase : TBTActionLeaf
         //        player.CheckEnemy();
         //    }
         //}
-        return thisData._Character.GetTargetEnemy() != null;
-        //return false;
+        //return thisData._Character.GetTargetEnemy() != null;
+        return false;
     }
 
     protected override void onEnter(TBTWorkingData wData)
@@ -128,14 +128,14 @@ class NodeWander : TBTActionLeaf
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        return thisData._Character.GetTargetEnemy() == null;
-        //return true;
+        //return thisData._Character.GetTargetEnemy() == null;
+        return true;
     }
 
     protected override void onEnter(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         GenerateTargetPos(thisData._Character.Head.transform.position, wData);
     }
 
@@ -186,11 +186,12 @@ class NodeWander : TBTActionLeaf
     void GenerateTargetPos(Vector3 curPos, TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        _TargetPos = MapManager.instance.GetRandPosInRect(
-            MathUtil.GetNextRandomRect(curPos, thisData._Character.VisualField, thisData._Character.Head.Radius * 2));
+        //_TargetPos = MapManager.instance.GetRandPosInRect(
+        //    MathUtil.GetNextRandomRect(curPos, thisData._Character.VisualField, thisData._Character.Head.Radius * 2));
+        _TargetPos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
 #if UNITY_EDITOR
         Debug.DrawLine(curPos, _TargetPos, Color.red, 1);
-
+        //Debug.LogError("name==" + thisData._Character.Name + ", pos=" + thisData._Character.transform.position);
         //// for test
         //var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         //go.transform.position = _TargetPos;

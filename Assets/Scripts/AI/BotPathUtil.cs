@@ -12,7 +12,6 @@ public class BotPathUtil : MonoBehaviour
     Vector3 _FinalTargetPos;
     List<Vector3> _PathList;
     public bool _IsInSteer { private set; get; }
-    static bool _IsGenBaseMatrix;
     private IPathFinder _PathFinder;
     Point2D _TempPoint2D;
 
@@ -25,6 +24,17 @@ public class BotPathUtil : MonoBehaviour
         _PathFinder.Formula = HeuristicFormula.Manhattan; //使用我个人觉得最快的曼哈顿A*算法
         _PathFinder.SearchLimit = 2000; //即移动经过方块(20*20)不大于2000个(简单理解就是步数) 
         _Character = character;
+    }
+
+    public void ClearData()
+    {
+        _Matrix = null;
+        _PathFinder = null;
+        _Character = null;
+        _TargetPos = Vector3.zero; 
+        _FinalTargetPos = Vector3.zero; 
+        _PathList.Clear(); 
+        _IsInSteer = false; 
     }
 
 #if UNITY_EDITOR
@@ -50,7 +60,7 @@ public class BotPathUtil : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        if (_Character.CharacterID != 2)
+        //if (_Character.CharacterID != 2)
         {
             return;
         }
@@ -97,7 +107,7 @@ public class BotPathUtil : MonoBehaviour
     bool _HasResetDynamicBarriersInThisFrame;
     void ResetDynamicBarriers()
     {
-        if (_HasResetDynamicBarriersInThisFrame)
+        //if (_HasResetDynamicBarriersInThisFrame)
         {
             return;
         }
@@ -181,7 +191,7 @@ public class BotPathUtil : MonoBehaviour
 
         if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= ConstValue._MinMoveDelta)
         {
-            var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed * GameManager.instance.DeltaTime;
+            var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
             //Debugger.LogBlue("pathutil motion=" + motion);
             bool rs = _Character.Move(motion);
         }

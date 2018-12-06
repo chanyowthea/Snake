@@ -22,6 +22,12 @@ namespace TsiU
         {
             _items = new Dictionary<string, TBlackboardItem>();
         }
+
+        public void Clear()
+        {
+            _items.Clear();
+        }
+
         public void SetValue(string key, object v)
         {
             TBlackboardItem item;

@@ -28,6 +28,11 @@ public class DelayCallUtil : MonoBehaviour
         Timer.Reset();
     }
 
+    private void Update()
+    {
+        RunOneFrame();
+    }
+
     public uint DelayCall(float delayTime, Action action, bool isRepeated = false)
     {
         TimerAction tAction = GlobalTimerActionPool.AllocObject();
@@ -47,7 +52,7 @@ public class DelayCallUtil : MonoBehaviour
         }
     }
 
-    public void RunOneFrame()
+    void RunOneFrame()
     {
         //update engine timer
         Timer.UpdateTime();
@@ -87,7 +92,7 @@ public class DelayCallUtil : MonoBehaviour
             }
         }
     }
-    public void FixedRunOneFrame()
+    void FixedRunOneFrame()
     {
 
     }

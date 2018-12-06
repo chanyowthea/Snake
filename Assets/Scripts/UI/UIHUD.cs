@@ -44,9 +44,9 @@ class UIHUD : BaseUI
             item.transform.localScale = Vector3.one;
             _RankItems.Add(item);
         }
-        //UpdateRankInfo();
-        _RankCallID = GameManager.instance.DelayCall(1, UpdateRankInfo, true);
-        _HUDCallID = GameManager.instance.DelayCall(1, UpdateHUDInfo, true);
+        UpdateRankInfo();
+        _RankCallID = Singleton._DelayUtil.DelayCall(1, UpdateRankInfo, true);
+        _HUDCallID = Singleton._DelayUtil.DelayCall(1, UpdateHUDInfo, true);
         _CountDownText.SetCountDownEndTime(GameManager.instance.GetRaceEndTime(), "", "", true, null, OnRaceEnd);
     }
 
@@ -57,6 +57,10 @@ class UIHUD : BaseUI
         for (int i = 0, length = Mathf.Min(cs.Count, _RankItems.Count); i < length; i++)
         {
             var character = cs[i];
+            if (character == null)
+            {
+                continue;
+            }
             var item = _RankItems[i];
             item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
         }
@@ -75,7 +79,7 @@ class UIHUD : BaseUI
         var index = cs.FindIndex((BaseCharacter temp) => temp.CharacterID == 0);
         ui.SetData(string.Format(_PromptContentFormat, index + 1), "再来一局", OnClickOK);
         UIManager.Instance.Close<UIInput>();
-        GameManager.instance.TimeScale = 0;
+        Singleton._DelayUtil.Timer._TimeScale = 0;
     }
 
     void OnClickOK()
@@ -88,11 +92,11 @@ class UIHUD : BaseUI
     {
         if (_HUDCallID != 0)
         {
-            GameManager.instance.CancelDelayCall(_HUDCallID);
+            Singleton._DelayUtil.CancelDelayCall(_HUDCallID);
         }
         if (_RankCallID != 0)
         {
-            GameManager.instance.CancelDelayCall(_RankCallID);
+            Singleton._DelayUtil.CancelDelayCall(_RankCallID);
         }
         for (int i = 0, length = _RankItems.Count; i < length; i++)
         {

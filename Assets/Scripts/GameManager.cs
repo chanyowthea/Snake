@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 // -- BUG -- 
 // 在原点重生很多次【在原点被攻击立刻重生】
@@ -40,44 +41,34 @@ public class GameManager : MonoBehaviour
 
     public GameObject FoodRoot { private set; get; }
     public GameObject BarrierRoot { private set; get; }
-    DelayCallUtil _DelayCallUtil;
     List<uint> _DelayCallIds = new List<uint>();
     Queue<Action> _ActionQueue = new Queue<Action>();
     List<BaseCharacter> _Characters = new List<BaseCharacter>();
+    public CharacterPool _EnemyPool = new CharacterPool();
+    public CharacterPool _PlayerPool = new CharacterPool();
+    public BodyPool _BodyPool = new BodyPool();
+    public BodyPool _HeadPool = new BodyPool();
+    public FoodPool _FoodPool = new FoodPool();
 
-    public float GameTime
-    {
-        get
-        {
-            return _DelayCallUtil.GameTime;
-        }
-    }
-
-    public float DeltaTime
-    {
-        get
-        {
-            return _DelayCallUtil.Timer.DeltaTime;
-        }
-    }
-
-    public float TimeScale
-    {
-        get
-        {
-            return _DelayCallUtil.Timer._TimeScale;
-        }
-        set
-        {
-            _DelayCallUtil.Timer._TimeScale = value;
-        }
-    }
     UniqueIDGenerator _IDGenerator = new UniqueIDGenerator();
     List<int> _RandomNameIDs = new List<int>();
 
     private void Awake()
     {
         instance = this;
+        Singleton.Init();
+    }
+
+    void OnDestroy()
+    {
+        _Characters.Clear();
+        _RandomNameIDs.Clear();
+        for (int i = 0, length = _DelayCallIds.Count; i < length; i++)
+        {
+            Singleton._DelayUtil.CancelDelayCall(_DelayCallIds[i]);
+        }
+        _DelayCallIds.Clear();
+        Singleton.Clear();
     }
 
     private void Start()
@@ -91,35 +82,18 @@ public class GameManager : MonoBehaviour
 
         FoodRoot = new GameObject("FoodRoot");
         BarrierRoot = new GameObject("BarrierRoot");
-        _DelayCallUtil = gameObject.AddComponent<DelayCallUtil>();
         Singleton._DelayUtil = gameObject.AddComponent<DelayCallUtil>();
         PrepareBarriers();
         Singleton._PathUtil = gameObject.AddComponent<PathFindingUtil>();
-        var id = DelayCall(0, DelayLoad);
+
+        _PlayerPool.SetData(_GameData._PlayerPrefab);
+        _EnemyPool.SetData(_GameData._EnemyPrefab);
+        _BodyPool.SetData(_GameData._BodyPrefab);
+        _HeadPool.SetData(_GameData._HeadPrefab);
+        _FoodPool.SetData(_GameData._FoodPrefab);
+        var id = Singleton._DelayUtil.DelayCall(0, DelayLoad);
         _DelayCallIds.Add(id);
-
-        DelayCall(3, PrepareFoods, true);
-    }
-
-    private void OnDestroy()
-    {
-        _Characters.Clear();
-        _RandomNameIDs.Clear();
-        for (int i = 0, length = _DelayCallIds.Count; i < length; i++)
-        {
-            CancelDelayCall(_DelayCallIds[i]);
-        }
-        _DelayCallIds.Clear();
-    }
-
-    public uint DelayCall(float delayTime, Action action, bool isRepeated = false)
-    {
-        return _DelayCallUtil.DelayCall(delayTime, action, isRepeated);
-    }
-
-    public void CancelDelayCall(uint id)
-    {
-        _DelayCallUtil.CancelDelayCall(id);
+        Singleton._DelayUtil.DelayCall(3, PrepareFoods, true);
     }
 
     private void Update()
@@ -133,13 +107,12 @@ public class GameManager : MonoBehaviour
                 queue();
             }
         }
-        _DelayCallUtil.RunOneFrame();
     }
 
-    void FixedUpdate()
-    {
-        _DelayCallUtil.FixedRunOneFrame();
-    }
+    //void FixedUpdate()
+    //{
+    //    _DelayCallUtil.FixedRunOneFrame();
+    //}
 
     void DelayLoad()
     {
@@ -169,12 +142,12 @@ public class GameManager : MonoBehaviour
         }
         RespawnCharacter(0);
 #if UNITY_EDITOR
-        RespawnCharacter(-1);
+        //RespawnCharacter(-1);
 #endif
         RespawnCharacter(1);
-        RespawnCharacter(2);
-        RespawnCharacter(3);
-        RespawnCharacter(1);
+        //RespawnCharacter(2);
+        //RespawnCharacter(3);
+        //RespawnCharacter(1);
         //RespawnCharacter(2);
         //RespawnCharacter(3);
     }
@@ -183,7 +156,7 @@ public class GameManager : MonoBehaviour
     {
         for (int i = 0; i < 30; i++)
         {
-            RespawnBarrier(1);
+            //RespawnBarrier(1);
         }
     }
 
@@ -230,7 +203,7 @@ public class GameManager : MonoBehaviour
     {
         if (characterId < 0)
         {
-            var player = GameObject.Instantiate(_GameData._PlayerPrefab);
+            var player = _PlayerPool.AllocObject();
             player.transform.position = Vector3.zero;
             player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             _Characters.Add(player);
@@ -239,7 +212,7 @@ public class GameManager : MonoBehaviour
 
         if (characterId != 0)
         {
-            var enemy = GameObject.Instantiate(_GameData._EnemyPrefab);
+            var enemy = _EnemyPool.AllocObject();
             enemy.transform.position = Vector3.zero;
             enemy.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             _Characters.Add(enemy);
@@ -247,7 +220,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            var player = GameObject.Instantiate(_GameData._PlayerPrefab);
+            var player = _PlayerPool.AllocObject();
             player.transform.position = Vector3.zero;
             player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength * 2);
             _Characters.Add(player);
@@ -275,10 +248,8 @@ public class GameManager : MonoBehaviour
         return playerInfo;
     }
 
-    static int _Count;
     public string GetRandomName()
     {
-        _Count += 1;
         int id = _RandomNameIDs[0];
         _RandomNameIDs.RemoveAt(0);
         var csv = ConfigDataManager.instance.GetData<PlayerNameCSV>(id.ToString());
@@ -302,11 +273,18 @@ public class GameManager : MonoBehaviour
 
     public void RespawnFood(int foodId)
     {
-        var food = GameObject.Instantiate(_GameData._FoodPrefab);
+        var food = _FoodPool.AllocObject();
         food.SetData(GameManager.instance.GetFoodData(foodId));
         var pos = MapManager.instance.GetValidRandPosInCurMap();
         food.transform.position = pos;
         food.transform.SetParent(FoodRoot.transform);
+    }
+
+    public void RemoveFood(Food obj)
+    {
+        Assert.IsNotNull(obj);
+        obj.ClearData();
+        _FoodPool.CollectObject(obj);
     }
 
     public void RespawnBarrier(int id)
@@ -319,17 +297,50 @@ public class GameManager : MonoBehaviour
         go.transform.SetParent(BarrierRoot.transform);
     }
 
-    public Body RespawnBody()
+    public Head RespawnHead()
     {
-        return GameObject.Instantiate(_GameData._BodyPrefab);
+        return _HeadPool.AllocObject() as Head;
     }
 
-    public void RemoveCharacter(BaseCharacter character)
+    public void RemoveHead(Head obj)
     {
+        Assert.IsNotNull(obj);
+        obj.ClearData();
+        _HeadPool.CollectObject(obj);
+    }
+
+    public Body RespawnBody()
+    {
+        return _BodyPool.AllocObject();
+    }
+
+    public void RemoveBody(Body obj)
+    {
+        Assert.IsNotNull(obj);
+        obj.ClearData();
+        _BodyPool.CollectObject(obj);
+    }
+
+    public void RemoveCharacter(Enemy character)
+    {
+        Assert.IsNotNull(character);
         if (_Characters.Contains(character))
         {
             _Characters.Remove(character);
         }
+        character.ClearData();
+        _EnemyPool.CollectObject(character);
+    }
+
+    public void RemoveCharacter(PlayerController character)
+    {
+        Assert.IsNotNull(character);
+        if (_Characters.Contains(character))
+        {
+            _Characters.Remove(character);
+        }
+        character.ClearData();
+        _PlayerPool.CollectObject(character);
     }
 
     public List<BaseCharacter> GetCharacters()
@@ -339,6 +350,6 @@ public class GameManager : MonoBehaviour
 
     public float GetRaceEndTime()
     {
-        return GameTime + ConstValue._RaceTime0 * 60;
+        return Singleton._DelayUtil.GameTime + ConstValue._RaceTime0 * 60;
     }
 }

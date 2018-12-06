@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
-public class Food : MonoBehaviour, IScore, IAddStrongBody
+public class Food : BaseMonoObject, IScore, IAddStrongBody
 {
     [SerializeField] CircleCollider2D _Collider;
     [SerializeField] SpriteRenderer _Sprite;
@@ -29,7 +30,7 @@ public class Food : MonoBehaviour, IScore, IAddStrongBody
 
     public bool IsAddStrongBody()
     {
-        return FoodData_._IsAddStrongBody; 
+        return FoodData_._IsAddStrongBody;
     }
 
     public void SetData(FoodData data)
@@ -39,6 +40,12 @@ public class Food : MonoBehaviour, IScore, IAddStrongBody
             return;
         }
         FoodData_ = data;
-        _Sprite.color = FoodData_._Color; 
+        _Sprite.color = FoodData_._Color;
+    }
+
+    public void ClearData()
+    {
+        Assert.IsNotNull(FoodData_);
+        FoodData_ = null;
     }
 }

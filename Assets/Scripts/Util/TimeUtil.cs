@@ -12,11 +12,11 @@ public class TimeUtil : MonoBehaviour
 
         if (isBefore)
         {
-            secondSpan = (int)(GameManager.instance.GameTime - timeStamp);
+            secondSpan = (int)(Singleton._DelayUtil.GameTime - timeStamp);
         }
         else
         {
-            secondSpan = (int)(timeStamp - GameManager.instance.GameTime);
+            secondSpan = (int)(timeStamp - Singleton._DelayUtil.GameTime);
         }
 
         if (secondSpan < 0)

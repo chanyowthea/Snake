@@ -5,6 +5,7 @@ using TsiU;
 
 public class Enemy : BaseCharacter
 {
+    [SerializeField] PlayerCamera _PlayerCamera;
     private TBTAction _BevTree;
     private BotWorkingData _BevWorkingData;
     BotPathUtil _PathUtil;
@@ -15,16 +16,26 @@ public class Enemy : BaseCharacter
         _BevWorkingData._Character = this;
         base.SetData(data, initBodyLength);
 
-        _PathUtil = this.gameObject.AddComponent<BotPathUtil>(); 
+        _PathUtil = this.gameObject.AddComponent<BotPathUtil>();
         _PathUtil.SetData(this);
+    }
+
+    public override void ClearData()
+    {
+        _BevTree = null; 
+        _BevWorkingData = null; 
+        _PathUtil.ClearData();
+        base.ClearData();
     }
 
     public override void Die()
     {
+        GameObject.Destroy(_PathUtil); 
         base.Die();
+        GameManager.instance.RemoveCharacter(this);
         GameManager.instance.RespawnCharacter(RandomUtil.instance.Next(1, 3), CharacterUniqueID);
     }
-    
+
     void Update()
     {
 #if UNITY_EDITOR
@@ -34,7 +45,7 @@ public class Enemy : BaseCharacter
             _PathUtil.SteerToTargetPos(targetPos);
         }
 #endif
-        UpdateBehavior(GameManager.instance.GameTime, GameManager.instance.DeltaTime);
+        UpdateBehavior(Singleton._DelayUtil.GameTime, Singleton._DelayUtil.Timer.DeltaTime);
     }
 
     //public override void AddBody(bool isStrong = false)
@@ -132,7 +143,7 @@ public class Enemy : BaseCharacter
                     target = body;
                     bodyPath = tempPath;
                     minDis = Vector3.Distance(this.Head.transform.position, point.position);
-                    body._CurChasePoint = point; 
+                    body._CurChasePoint = point;
                     break;
                 }
             }
@@ -234,6 +245,10 @@ public class Enemy : BaseCharacter
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
+        if (this.Head == null)
+        {
+            return;
+        }
         Gizmos.DrawWireSphere(this.Head.transform.position, VisualField);
     }
 #endif

@@ -27,6 +27,6 @@ public class UIInput : BaseUI
         {
             onValueChanged(value.normalized);
         }
-        PlayerController.instance.OnMove(value.normalized); 
+        PlayerController.instance.OnMove(value.normalized);
     }
 }

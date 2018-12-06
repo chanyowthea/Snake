@@ -9,7 +9,6 @@ public class PathFindingUtil : MonoBehaviour
     // recaculate matrix every frame. but only run once in one frame even if there are several players. 
     public byte[,] _Matrix { private set; get; }
     // caculate only once after enter the map. 
-    private byte[,] _BaseMatrix;
     private IPathFinder _PathFinder;
     public Vector2 CurMapSize
     {
@@ -42,7 +41,7 @@ public class PathFindingUtil : MonoBehaviour
         //GameManager.instance.DelayCall(1, ResetDynamicBarriers, true);
     }
 
-    private void Update()
+    private void Update1()
     {
         _HasResetDynamicBarriersInThisFrame = false;
     }

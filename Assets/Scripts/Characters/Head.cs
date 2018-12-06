@@ -4,10 +4,16 @@ using UnityEngine;
 
 public class Head : Body
 {
+    public CharacterName CharacterName
+    {
+        get
+        {
+            return _CharacterName;
+        }
+    }
+
+    [SerializeField] CharacterName _CharacterName;
     Vector3 _LastPos;
-    //int _ChangeDirTimes = 0;
-    //Vector3 _Motion0;
-    //bool _TurnRight;
 
     private void OnDrawGizmos()
     {
@@ -28,6 +34,10 @@ public class Head : Body
             {
                 var col = colliders[i];
                 var body = col.GetComponent<Body>();
+                if (body == null)
+                {
+                    body = col.GetComponentInParent<Head>();
+                }
                 if (body != null)
                 {
                     if (body._Character == this._Character)
@@ -79,6 +89,7 @@ public class Head : Body
         {
             this.transform.position += pos;
             this.transform.right = pos.normalized;
+            this._CharacterName.transform.right = Vector3.right;
             _ChangeDirTimes = 0;
             //Debugger.LogBlue("pass pos=" + pos);
         }
@@ -119,8 +130,8 @@ public class Head : Body
 
                 //if (_Character.CharacterID != 0)
                 //    Debugger.LogGreen(string.Format("pass={0}, times={1}, pos={2}", pass,
-                        //_ChangeDirTimes,
-                        //MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1))));
+                //_ChangeDirTimes,
+                //MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1))));
                 pass = Move(MathUtil.V3RotateAround(_Motion0, -Vector3.forward, -90 * (_TurnRight ? 1 : -1)));
             }
             else
@@ -159,9 +170,9 @@ public class Head : Body
                 if (body != null)
                 {
                     Eat(body.GetCollider());
+                    body._Character.Die();
                 }
                 _Character.Kill(body._Character);
-                body._Character.Die();
                 return true;
             }
             return false;
@@ -171,6 +182,7 @@ public class Head : Body
             if (body._Character == null)
             {
                 Eat(body.GetCollider());
+                GameManager.instance.RemoveBody(body);
             }
             else
             {
@@ -179,6 +191,7 @@ public class Head : Body
                 if (food != null)
                 {
                     Eat(food.GetCollider());
+                    GameManager.instance.RemoveBody(body);
                 }
             }
             return true;
@@ -199,6 +212,7 @@ public class Head : Body
         if (food != null)
         {
             Eat(food.GetCollider());
+            GameManager.instance.RemoveFood(food);
         }
         return true;
     }
@@ -208,7 +222,6 @@ public class Head : Body
         if (food != null)
         {
             //Debug.Log("Eat food=" + food.radius);
-            GameObject.Destroy(food.gameObject);
             var iAdd = food.GetComponent<IAddStrongBody>();
             if (iAdd != null)
             {

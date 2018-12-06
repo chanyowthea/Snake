@@ -38,10 +38,10 @@ public class CountDownText : MonoBehaviour
         m_Suffix = suffix;
         m_Formated = formated;
 
-        GameManager.instance.CancelDelayCall(m_DelayCall);
+        Singleton._DelayUtil.CancelDelayCall(m_DelayCall);
         if (m_Label != null && enabled)
             CountDown();//call it once immediately
-        m_DelayCall = GameManager.instance.DelayCall(1.0f, CountDown, true);
+        m_DelayCall = Singleton._DelayUtil.DelayCall(1.0f, CountDown, true);
     }
 
     public void SetCountDownEndTime(CountDownConfig config)
@@ -59,7 +59,7 @@ public class CountDownText : MonoBehaviour
 
     void OnDestroy()
     {
-        GameManager.instance.CancelDelayCall(m_DelayCall);
+        Singleton._DelayUtil.CancelDelayCall(m_DelayCall);
     }
 
     void CountDown()
@@ -67,7 +67,7 @@ public class CountDownText : MonoBehaviour
         if (m_OnStarted != null)
             m_OnStarted();
 
-        float nowStamp = GameManager.instance.GameTime;
+        float nowStamp = Singleton._DelayUtil.GameTime;
         if (nowStamp <= endTime)
         {
             if (m_Formated)
@@ -80,7 +80,7 @@ public class CountDownText : MonoBehaviour
         {
             if (m_OnFinished != null)
                 m_OnFinished();
-            GameManager.instance.CancelDelayCall(m_DelayCall);
+            Singleton._DelayUtil.CancelDelayCall(m_DelayCall);
         }
     }
 
@@ -91,6 +91,6 @@ public class CountDownText : MonoBehaviour
 
     public void Cancel()
     {
-        GameManager.instance.CancelDelayCall(m_DelayCall);
+        Singleton._DelayUtil.CancelDelayCall(m_DelayCall);
     }
 }

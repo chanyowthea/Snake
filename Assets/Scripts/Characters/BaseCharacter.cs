@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using TsiU;
 using UnityEngine;
+using UnityEngine.Assertions;
 
-public class BaseCharacter : MonoBehaviour, IComparable
+public class BaseCharacter : BaseMonoObject, IComparable
 {
     public virtual bool IsLocalPlayer { protected set; get; }
 
@@ -27,8 +28,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
     {
         get
         {
-            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f) *
-                GameManager.instance.TimeScale;
+            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f);
         }
         protected set
         {
@@ -47,17 +47,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
         }
     }
 
-    public uint CharacterUniqueID
-    {
-        get
-        {
-            if (PlayerInfo_ == null)
-            {
-                return uint.MinValue;
-            }
-            return PlayerInfo_._UniqueID;
-        }
-    }
+    public uint CharacterUniqueID{ protected set; get;}
 
     float _Scores;
     public float Scores
@@ -73,7 +63,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
             RunTimeData.instance.UpdateScores(CharacterUniqueID, (int)_Scores);
         }
     }
-    protected float LengthPoints;
+    protected float _LengthPoints;
     public string Name
     {
         get
@@ -132,33 +122,59 @@ public class BaseCharacter : MonoBehaviour, IComparable
             return PlayerInfo_._PlayerData;
         }
     }
+
     public PlayerInfo PlayerInfo_ { private set; get; }
 
     // set body in order. 
     List<Body> _Bodies = new List<Body>();
-    [SerializeField] Head _Head;
-    [SerializeField] CharacterName _CharacterName;
+    protected Head _Head;
+    protected CharacterName _CharacterName;
     protected const string _TARGET_POS = "TargetPos";
     protected const string _TARGET_ENEMY = "TargetEnemy";
     protected TBlackBoard _Blackboard = new TBlackBoard();
 
+    public override void OnAllocated()
+    {
+        base.OnAllocated();
+    }
+
+    public override void OnCollected()
+    {
+        base.OnCollected();
+    }
+
     public virtual void SetData(PlayerInfo data, int initBodyLength)
     {
-        if (data == null || data._PlayerData == null)
-        {
-            return;
-        }
-
+        Assert.IsNotNull(data);
+        Assert.IsNotNull(data._PlayerData);
         PlayerInfo_ = data;
-        _CharacterName.SetData(PlayerInfo_._Name);
+        CharacterUniqueID = data._UniqueID;
         Scores = PlayerInfo_._Scores;
         MoveSpeed = ConstValue._DefaultBaseMoveSpeed;
+        _Head = GameManager.instance.RespawnHead();
+        _Head.transform.SetParent(this.transform);
         Head.SetData(this, 0, null);
         Head.transform.position = data._BirthPos;
+        _CharacterName = Head.CharacterName;
+        _CharacterName.SetData(PlayerInfo_._Name);
         for (int i = 0; i < initBodyLength; i++)
         {
             AddBody();
         }
+    }
+
+    public virtual void ClearData()
+    {
+        Assert.IsNotNull(_Head);
+        GameManager.instance.RemoveHead(_Head);
+        _Bodies.Clear();
+        _Blackboard.Clear();
+        PlayerInfo_ = null;
+        _Scores = 0;
+        _LengthPoints = 0;
+        _MoveSpeed = 0;
+        StrongLength = 0;
+        _CharacterName.ClearData();
     }
 
     float GetMoveSpeedFactor(int x, float y)
@@ -259,9 +275,6 @@ public class BaseCharacter : MonoBehaviour, IComparable
             Scores = 0;
         }
         RemoveBody(0);
-        _Head.Break();
-        GameManager.instance.RemoveCharacter(this);
-        GameObject.Destroy(this.gameObject);
     }
 
     public virtual void AddScore(float delta, bool addBody = true)
@@ -269,10 +282,10 @@ public class BaseCharacter : MonoBehaviour, IComparable
         Scores += delta;
         if (addBody)
         {
-            LengthPoints += delta;
-            while (LengthPoints >= ConstValue._OneBodyScores)
+            _LengthPoints += delta;
+            while (_LengthPoints >= ConstValue._OneBodyScores)
             {
-                LengthPoints -= ConstValue._OneBodyScores;
+                _LengthPoints -= ConstValue._OneBodyScores;
                 AddBody();
             }
         }
@@ -296,7 +309,7 @@ public class BaseCharacter : MonoBehaviour, IComparable
             if (value.GetComponent<Body>() != null)
             {
                 //Debugger.LogError(string.Format("SetTargetEnemy value={0}, character={1}",
-                    //value.name, value.GetComponent<Body>()._Character));
+                //value.name, value.GetComponent<Body>()._Character));
             }
             //Debugger.Log(string.Format("SetTargetEnemy value={0}, pos={1}", value.name, value.transform.position));
         }
