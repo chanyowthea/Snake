@@ -130,16 +130,18 @@ public class Body : BaseMonoObject, IScore, IAddStrongBody
         for (int i = 0, length = bodyOffsets.Length; i < length; i++)
         {
             var offset = bodyOffsets[i];
-            float angle = Vector3.Angle(Vector3.right, this.transform.right);
-            if (this.transform.position.y < 0)
-            {
-                angle *= -1;
-            }
-            offset = MathUtil.V3RotateAround(offset, -Vector3.forward, -angle);
-            Vector3 pos = this.transform.position + offset * this.Radius;
+            //float angle = Vector3.Angle(Vector3.right, this.transform.right);
+            //if (this.transform.position.y < 0)
+            //{
+            //    angle *= -1;
+            //}
+            //offset = MathUtil.V3RotateAround(offset, -Vector3.forward, -angle);
+            //Vector3 pos = this.transform.position + offset * this.Radius;
             var point = new GameObject("ChasePoint" + i).transform;
-            point.position = pos;
+            //point.position = pos;
+            point.position = this.transform.position + (offset.x * this.transform.right + offset.y * this.transform.up) * Radius;
             point.SetParent(this.transform);
+            point.right = this.transform.right;
             _ChasePoints.Add(point);
         }
     }

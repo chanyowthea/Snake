@@ -20,27 +20,6 @@ public class PlayerController : BaseCharacter
     public static PlayerController instance { private set; get; }
     [SerializeField] PlayerCamera _PlayerCamera;
 
-    private void Awake()
-    {
-#if UNITY_EDITOR
-        if (instance != null)
-        {
-            return;
-        }
-#endif
-        instance = this;
-    }
-
-#if UNITY_EDITOR
-    private void OnDestroy()
-    {
-        if (instance == this)
-        {
-            instance = null;
-        }
-    }
-#endif
-
     public override void SetData(PlayerInfo data, int initBodyLength)
     {
         base.SetData(data, initBodyLength);
@@ -60,11 +39,13 @@ public class PlayerController : BaseCharacter
 
     public sealed override void OnAllocated()
     {
+        instance = this; 
         base.OnAllocated();
     }
 
     public sealed override void OnCollected()
     {
+        instance = null; 
         _PlayerCamera.gameObject.SetActive(false);
         base.OnCollected();
     }

@@ -179,7 +179,7 @@ public class BotPathUtil : MonoBehaviour
 
         if (_PathList.Count > 0)
         {
-            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < ConstValue._MinMoveDelta)
+            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < RunTimeData._MinMoveDelta)
             {
                 _PathList.RemoveAt(0);
                 if (_PathList.Count > 0)
@@ -189,7 +189,7 @@ public class BotPathUtil : MonoBehaviour
             }
         }
 
-        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= ConstValue._MinMoveDelta)
+        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= RunTimeData._MinMoveDelta)
         {
             var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
             //Debugger.LogBlue("pathutil motion=" + motion);

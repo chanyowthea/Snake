@@ -21,6 +21,12 @@ public class UIInput : BaseUI
 
     public event Action<Vector2> onValueChanged;
 
+    public override void Open(NavigationData data = null)
+    {
+        base.Open(data);
+        CanvasComp.sortingOrder = 0;
+    }
+
     public void OnValueChanged(Vector2 value)
     {
         if (onValueChanged != null)

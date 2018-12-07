@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class PlayerInfo
 {
-    public uint _UniqueID; 
-    public int _KillCount; 
+    public uint _UniqueID;
+    public int _KillCount;
     public int _DieTimes;
     public string _Name;
     public int _Scores;
@@ -15,8 +15,11 @@ public class PlayerInfo
 
 public class RunTimeData : TSingleton<RunTimeData>
 {
+    public static float _MinMoveDelta { get { return ConstValue._BodyUnitSize * 0.1f * _DefaultBaseMoveSpeed / 3f; } }
+    public static float _DefaultBaseMoveSpeed = 5;
+
     Dictionary<uint, PlayerInfo> _ScoresDict = new Dictionary<uint, PlayerInfo>();
-    
+
     public void UpdateScores(uint characterUniqueId, int scores)
     {
         if (!_ScoresDict.ContainsKey(characterUniqueId))

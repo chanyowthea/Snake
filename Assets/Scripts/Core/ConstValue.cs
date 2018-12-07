@@ -18,8 +18,6 @@ public static class ConstValue
     public const int _ScoreUnit = 1;
     public const float _KillScoresRatio = 0.2f;
     public const float _BodyUnitSize = 0.5f;
-    public const float _MinMoveDelta = _BodyUnitSize * 0.1f;
-    public const float _DefaultBaseMoveSpeed = 6f;
     public const float _RaceTime0 = 10f;
 
     // render value

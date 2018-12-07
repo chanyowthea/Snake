@@ -145,11 +145,11 @@ public class GameManager : MonoBehaviour
         //RespawnCharacter(-1);
 #endif
         RespawnCharacter(1);
-        //RespawnCharacter(2);
-        //RespawnCharacter(3);
-        //RespawnCharacter(1);
-        //RespawnCharacter(2);
-        //RespawnCharacter(3);
+        RespawnCharacter(2);
+        RespawnCharacter(3);
+        RespawnCharacter(1);
+        RespawnCharacter(2);
+        RespawnCharacter(3);
     }
 
     void PrepareBarriers()
@@ -222,7 +222,7 @@ public class GameManager : MonoBehaviour
         {
             var player = _PlayerPool.AllocObject();
             player.transform.position = Vector3.zero;
-            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength * 2);
+            player.SetData(GetPlayerInfo(characterId, uniqueID), ConstValue._DefaultBodyLength);
             _Characters.Add(player);
             return player;
         }

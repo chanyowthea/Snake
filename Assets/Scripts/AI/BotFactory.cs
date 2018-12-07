@@ -8,17 +8,16 @@ public class BotFactory : MonoBehaviour
     /// <summary>
     /// 行为树
     /// </summary>
-    private static TBTAction _BevTree;
+    //private static TBTAction _BevTree;
     static public TBTAction GetBehaviourTree()
     {
-        if (_BevTree != null)
-        {
-            return _BevTree;
-        }
-        _BevTree = new TBTActionPrioritizedSelector();
+        //if (_BevTree != null)
+        //{
+        //    return _BevTree;
+        //}
+        var _BevTree = new TBTActionPrioritizedSelector();
         _BevTree.AddChild(new NodeChase())
-                .AddChild(new NodeWander())
-            ;
+                .AddChild(new NodeWander());
         return _BevTree;
     }
 }
@@ -38,7 +37,7 @@ class CON_HasReachedTarget : TBTPreconditionLeaf
         Vector3 targetPos = thisData._Character.GetTargetPos();
         Vector3 currentPos = thisData._Character.Head.transform.position;
         var dis = Vector3.Distance(targetPos, currentPos);
-        return dis < ConstValue._MinMoveDelta;
+        return dis < RunTimeData._MinMoveDelta;
     }
 }
 
@@ -79,7 +78,7 @@ class NodeChase : TBTActionLeaf
         Vector3 targetPos = thisData._Character.GetTargetPos();
         Vector3 currentPos = thisData._Character.Head.transform.position;
         float distToTarget = Vector3.Distance(targetPos, currentPos);
-        if (distToTarget < ConstValue._MinMoveDelta)
+        if (distToTarget < RunTimeData._MinMoveDelta)
         {
             //_CurSteerTime = 0;
             return TBTRunningStatus.FINISHED;
@@ -128,6 +127,8 @@ class NodeWander : TBTActionLeaf
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
+
+        //thisData._Character.SetTargetEnemy(null);
         //return thisData._Character.GetTargetEnemy() == null;
         return true;
     }
@@ -135,7 +136,7 @@ class NodeWander : TBTActionLeaf
     protected override void onEnter(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        //Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         GenerateTargetPos(thisData._Character.Head.transform.position, wData);
     }
 
@@ -148,10 +149,10 @@ class NodeWander : TBTActionLeaf
     protected override int onExecute(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //Debugger.LogErrorFormat("dis={0}, delta={1}",
-        //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta);
+        //Debugger.LogErrorFormat("dis={0}, delta={1}, Name={2}, _TargetPos={3}, NodeWander.HashCode={4}",
+        //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta, thisData._Character.Name, _TargetPos, GetHashCode());
         // redirect
-        if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < ConstValue._MinMoveDelta)
+        if (Vector3.Distance(thisData._Character.Head.transform.position, _TargetPos) < RunTimeData._MinMoveDelta)
         {
             _CurSteerTime = 0;
             GenerateTargetPos(thisData._Character.Head.transform.position, wData);
@@ -160,11 +161,11 @@ class NodeWander : TBTActionLeaf
         else
         {
             //Debugger.LogGreen("curtime=" + _CurSteerTime);
-            //if (_CurSteerTime > 0)
-            //{
-            //    _CurSteerTime -= thisData._DeltaTime;
-            //}
-            //else
+            if (_CurSteerTime > 0)
+            {
+                _CurSteerTime -= thisData._DeltaTime;
+            }
+            else
             {
                 _CurSteerTime = _SteerGapTime;
                 Enemy bot = thisData._Character as Enemy;
@@ -178,7 +179,7 @@ class NodeWander : TBTActionLeaf
         var player = (thisData._Character as Enemy);
         if (player != null)
         {
-            player.CheckEnemy();
+            //player.CheckEnemy();
         }
         return TBTRunningStatus.EXECUTING;
     }
@@ -186,13 +187,13 @@ class NodeWander : TBTActionLeaf
     void GenerateTargetPos(Vector3 curPos, TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //_TargetPos = MapManager.instance.GetRandPosInRect(
-        //    MathUtil.GetNextRandomRect(curPos, thisData._Character.VisualField, thisData._Character.Head.Radius * 2));
-        _TargetPos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
+        _TargetPos = MapManager.instance.GetRandPosInRect(
+            MathUtil.GetNextRandomRect(curPos, thisData._Character.VisualField, thisData._Character.Head.Radius * 2));
+        //_TargetPos = MapManager.instance.GetRandPosInCurMap(ESpawnType.Character);
 #if UNITY_EDITOR
         Debug.DrawLine(curPos, _TargetPos, Color.red, 1);
-        //Debug.LogError("name==" + thisData._Character.Name + ", pos=" + thisData._Character.transform.position);
-        //// for test
+        //Debug.LogError("name==" + thisData._Character.Name + ", target pos=" + _TargetPos + ", NodeWander.HashCode=" + GetHashCode());
+        // for test
         //var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         //go.transform.position = _TargetPos;
 #endif

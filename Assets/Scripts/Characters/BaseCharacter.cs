@@ -28,7 +28,7 @@ public class BaseCharacter : BaseMonoObject, IComparable
     {
         get
         {
-            return _MoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f);
+            return RunTimeData._DefaultBaseMoveSpeed * (Mathf.Exp(-BodyLength * GetMoveSpeedFactor(30, 0.6f)) * 0.7f + 0.3f);
         }
         protected set
         {
@@ -150,7 +150,7 @@ public class BaseCharacter : BaseMonoObject, IComparable
         PlayerInfo_ = data;
         CharacterUniqueID = data._UniqueID;
         Scores = PlayerInfo_._Scores;
-        MoveSpeed = ConstValue._DefaultBaseMoveSpeed;
+        MoveSpeed = RunTimeData._DefaultBaseMoveSpeed;
         _Head = GameManager.instance.RespawnHead();
         _Head.transform.SetParent(this.transform);
         Head.SetData(this, 0, null);

@@ -62,7 +62,14 @@ class UIHUD : BaseUI
                 continue;
             }
             var item = _RankItems[i];
-            item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
+            if (PlayerController.instance != null)
+            {
+                item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
+            }
+            else
+            {
+                item.SetData(character.Name, (int)character.Scores, false);
+            }
         }
     }
 
@@ -86,6 +93,11 @@ class UIHUD : BaseUI
     {
         UIManager.Instance.ChangeScene();
         SceneManager.LoadScene("Play");
+    }
+
+    public void OnClickSettings()
+    {
+        UIManager.Instance.Open<UISettings>();
     }
 
     internal override void Close()
