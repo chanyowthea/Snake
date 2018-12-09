@@ -5,6 +5,7 @@ using UIFramework;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.Assertions;
 
 class UIHUD : BaseUI
 {
@@ -52,19 +53,33 @@ class UIHUD : BaseUI
 
     void UpdateRankInfo()
     {
+        return;
+
         var cs = GameManager.instance.GetCharacters();
         CharacterUtil.InsertionSort<BaseCharacter>(cs, CharacterUtil.Compare); // .Sort((BaseCharacter cx, BaseCharacter cy) => cy.TotalLength - cx.TotalLength); 
-        for (int i = 0, length = Mathf.Min(cs.Count, _RankItems.Count); i < length; i++)
+        for (int i = 0, length = _RankItems.Count; i < length; i++)
         {
-            var character = cs[i];
-            if (character == null)
+            var item = _RankItems[i];
+            if (cs.Count - 1 < i)
             {
+                if (item.gameObject.activeSelf)
+                {
+                    item.gameObject.SetActive(false);
+                }
                 continue;
             }
-            var item = _RankItems[i];
+            else
+            {
+                if (!item.gameObject.activeSelf)
+                {
+                    item.gameObject.SetActive(true);
+                }
+            }
+            var character = cs[i];
+            Assert.IsNotNull(character);
             if (PlayerController.instance != null)
             {
-                item.SetData(character.Name, (int)character.Scores, character.CharacterID == PlayerController.instance.CharacterID);
+                item.SetData(character.Name, (int)character.Scores, character.CharacterUniqueID == PlayerController.instance.CharacterUniqueID);
             }
             else
             {

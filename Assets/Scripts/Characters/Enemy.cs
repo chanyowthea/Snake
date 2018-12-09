@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TsiU;
+using System;
 
 public class Enemy : BaseCharacter
 {
@@ -232,9 +233,9 @@ public class Enemy : BaseCharacter
         }
     }
 
-    public void SteerToTargetPos(Vector3 pos)
+    public void SteerToTargetPos(Vector3 pos, Action onFailed = null)
     {
-        _PathUtil.SteerToTargetPos(pos);
+        _PathUtil.SteerToTargetPos(pos, onFailed);
     }
 
     public bool IsSteering()

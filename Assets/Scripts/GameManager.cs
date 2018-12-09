@@ -156,7 +156,7 @@ public class GameManager : MonoBehaviour
     {
         for (int i = 0; i < 30; i++)
         {
-            //RespawnBarrier(1);
+            RespawnBarrier(1);
         }
     }
 

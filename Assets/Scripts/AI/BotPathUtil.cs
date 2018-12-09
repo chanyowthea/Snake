@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using Components.AStar;
 using Components.Struct;
+using System;
+using UnityEngine.Assertions;
 
 public class BotPathUtil : MonoBehaviour
 {
     private byte[,] _Matrix;
     BaseCharacter _Character;
-    Vector3 _TargetPos;
-    Vector3 _FinalTargetPos;
+    [SerializeField] Vector3 _TargetPos;
+    [SerializeField] Vector3 _FinalTargetPos;
     List<Vector3> _PathList;
     public bool _IsInSteer { private set; get; }
     private IPathFinder _PathFinder;
     Point2D _TempPoint2D;
+    Action _OnSteerFailed;
+    float _StartSteerTime;
+    float _TimeOutTime = 1f;
+    Vector3 _PrevTimeOutPos;
 
     public void SetData(BaseCharacter character)
     {
@@ -31,10 +37,10 @@ public class BotPathUtil : MonoBehaviour
         _Matrix = null;
         _PathFinder = null;
         _Character = null;
-        _TargetPos = Vector3.zero; 
-        _FinalTargetPos = Vector3.zero; 
-        _PathList.Clear(); 
-        _IsInSteer = false; 
+        _TargetPos = Vector3.zero;
+        _FinalTargetPos = Vector3.zero;
+        _PathList.Clear();
+        _IsInSteer = false;
     }
 
 #if UNITY_EDITOR
@@ -73,12 +79,14 @@ public class BotPathUtil : MonoBehaviour
     }
 #endif
 
-    public void SteerToTargetPos(Vector3 pos)
+    public void SteerToTargetPos(Vector3 pos, Action onFailed = null)
     {
+        _OnSteerFailed = onFailed;
         _FinalTargetPos = pos;
         _PathList = FindPath(_Character.Head.transform.position, pos);
         if (_PathList != null)
         {
+            _StartSteerTime = Singleton._DelayUtil.GameTime;
             _IsInSteer = true;
             _PathList.Reverse();
             if (_PathList.Count > 0)
@@ -168,6 +176,10 @@ public class BotPathUtil : MonoBehaviour
         return result;
     }
 
+    Queue<Vector3> _LastStepPoses = new Queue<Vector3>();
+    const int _MaxRecordStepCount = 5;
+    float _AccumulateTime;
+    Vector3 _LastFrameHeadPos;
     public void Update()
     {
         _HasResetDynamicBarriersInThisFrame = false;
@@ -176,7 +188,11 @@ public class BotPathUtil : MonoBehaviour
         {
             return;
         }
-
+        _LastFrameHeadPos = _Character.Head.transform.position;
+        //if (Singleton._DelayUtil.GameTime - _StartSteerTime >= _TimeOutTime)
+        //{
+        //    _PrevTimeOutPos = _Character.Head.transform.position;
+        //}
         if (_PathList.Count > 0)
         {
             if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < RunTimeData._MinMoveDelta)
@@ -191,9 +207,19 @@ public class BotPathUtil : MonoBehaviour
 
         if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= RunTimeData._MinMoveDelta)
         {
-            var motion = (_TargetPos - _Character.Head.transform.position).normalized * _Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
+            var motion = (_TargetPos - _Character.Head.transform.position).normalized
+                * _Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
             //Debugger.LogBlue("pathutil motion=" + motion);
             bool rs = _Character.Move(motion);
+            if (!rs)
+            {
+                _IsInSteer = false;
+                if (_OnSteerFailed != null)
+                {
+                    _OnSteerFailed();
+                }
+                return;
+            }
         }
         // has reach the final destination?
         else
@@ -202,7 +228,41 @@ public class BotPathUtil : MonoBehaviour
             if (_PathList.Count == 0)
             {
                 _IsInSteer = false;
+                return;
             }
         }
+
+        if (_LastStepPoses.Count == _MaxRecordStepCount)
+        {
+            int nearCount = 0;
+            foreach (var item in _LastStepPoses)
+            {
+                if (Vector3.Distance(item, _Character.Head.transform.position) < RunTimeData._MinMoveDelta)
+                {
+                    nearCount += 1;
+                }
+            }
+            //&& Vector3.Distance(_LastStepPoses.Peek(), _Character.Head.transform.position)
+            //< RunTimeData._MinMoveDelta * 2; 
+            if (nearCount >= 2)
+            {
+                Debug.LogErrorFormat("name={0}, peek={1}, dist={2}, delta={3}",
+                    _Character.Name, _LastStepPoses.Peek(),
+                    Vector3.Distance(_LastStepPoses.Peek(), _Character.Head.transform.position),
+                    RunTimeData._MinMoveDelta * 2);
+                _IsInSteer = false;
+                if (_OnSteerFailed != null)
+                {
+                    _OnSteerFailed();
+                }
+                return;
+            }
+        }
+        Assert.IsTrue(_LastStepPoses.Count <= _MaxRecordStepCount);
+        if (_LastStepPoses.Count == _MaxRecordStepCount)
+        {
+            _LastStepPoses.Dequeue();
+        }
+        _LastStepPoses.Enqueue(_Character.Head.transform.position);
     }
 }

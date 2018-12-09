@@ -171,7 +171,11 @@ class NodeWander : TBTActionLeaf
                 Enemy bot = thisData._Character as Enemy;
                 if (bot != null)
                 {
-                    bot.SteerToTargetPos(_TargetPos);
+                    bot.SteerToTargetPos(_TargetPos, () =>
+                    {
+                        _CurSteerTime = 0;
+                        GenerateTargetPos(thisData._Character.Head.transform.position, wData);
+                    });
                 }
             }
         }

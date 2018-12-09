@@ -24,7 +24,8 @@ public class Body : BaseMonoObject, IScore, IAddStrongBody
     }
 
     protected int _ChangeDirTimes = 0;
-    protected Vector3 _Motion0;
+    protected Vector3 _Motion1;
+    protected Vector3 _OriginMotion1;
     protected bool _TurnRight;
 
     public virtual void SetData(BaseCharacter character, int index, Body prev)
@@ -44,7 +45,7 @@ public class Body : BaseMonoObject, IScore, IAddStrongBody
         _PrevBody = null;
         ClearAllChasePoints();
         _ChangeDirTimes = 0;
-        _Motion0 = Vector3.zero;
+        _Motion1 = Vector3.zero;
         IsStrong = false;
     }
 
