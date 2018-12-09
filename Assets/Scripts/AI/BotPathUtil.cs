@@ -17,6 +17,7 @@ public class BotPathUtil : MonoBehaviour
     private IPathFinder _PathFinder;
     Point2D _TempPoint2D;
     Action _OnSteerFailed;
+    Action _OnSteerFinished;
     float _StartSteerTime;
     float _TimeOutTime = 1f;
     Vector3 _PrevTimeOutPos;
@@ -39,7 +40,12 @@ public class BotPathUtil : MonoBehaviour
         _Character = null;
         _TargetPos = Vector3.zero;
         _FinalTargetPos = Vector3.zero;
-        _PathList.Clear();
+        if (_PathList != null)
+        {
+            _PathList.Clear();
+            _PathList = null;
+        }
+        _LastStepPoses.Clear();
         _IsInSteer = false;
     }
 
@@ -64,11 +70,34 @@ public class BotPathUtil : MonoBehaviour
         _Grids.Add(new Rect(pos1.x - PathFindingUtil._GridSize / 2f, pos1.y - PathFindingUtil._GridSize / 2f, PathFindingUtil._GridSize * 0.8f, PathFindingUtil._GridSize * 0.8f));
     }
 
+    List<Rect> _PathGrids = new List<Rect>();
+    //for test
+    public void GenPathGrid()
+    {
+        _PathGrids.Clear();
+        if (_PathList != null)
+        {
+            for (int i = 0, length = _PathList.Count; i < length; i++)
+            {
+                var pos = _PathList[i];
+                _PathGrids.Add(new Rect(pos.x - PathFindingUtil._GridSize / 2f, pos.y - PathFindingUtil._GridSize / 2f, PathFindingUtil._GridSize * 0.8f, PathFindingUtil._GridSize * 0.8f));
+            }
+        }
+        //var pos1 = Singleton._PathUtil.ConvertVector3(new PathFinderNode { X = 0, Y = 0 });
+        //_PathGrids.Add(new Rect(pos1.x - PathFindingUtil._GridSize / 2f, pos1.y - PathFindingUtil._GridSize / 2f, PathFindingUtil._GridSize * 0.8f, PathFindingUtil._GridSize * 0.8f));
+    }
+
     public void OnDrawGizmos()
     {
-        //if (_Character.CharacterID != 2)
+        GenPathGrid();
+        _PathGrids.ForEach((r) =>
         {
-            return;
+            Grid.DrawRect(r, Color.blue);
+        });
+
+        if (_Character.CharacterID != 2)
+        {
+            //return;
         }
 
         GenGrid();
@@ -79,8 +108,9 @@ public class BotPathUtil : MonoBehaviour
     }
 #endif
 
-    public void SteerToTargetPos(Vector3 pos, Action onFailed = null)
+    public void SteerToTargetPos(Vector3 pos, Action onFinish, Action onFailed = null)
     {
+        _OnSteerFinished = onFinish;
         _OnSteerFailed = onFailed;
         _FinalTargetPos = pos;
         _PathList = FindPath(_Character.Head.transform.position, pos);
@@ -102,7 +132,7 @@ public class BotPathUtil : MonoBehaviour
         else
         {
             Debugger.LogError("_IsInSteer = false");
-            _IsInSteer = false;
+            SteerFailed();
         }
         //Debugger.LogError(LogUtil.GetCurMethodName() + "_TargetPos=" + _TargetPos + ", headPos=" + _Character.Head.transform.position);
     }
@@ -113,15 +143,21 @@ public class BotPathUtil : MonoBehaviour
     float _HeadSize = ConstValue._BodyUnitSize;
     float _BodySize = ConstValue._BodyUnitSize;
     bool _HasResetDynamicBarriersInThisFrame;
+    public List<Point2D> _PrevRoadGrids = new List<Point2D>();
+
+    // elude enemy's attack. 
+    int _MaxEludeRadius = 3; 
     void ResetDynamicBarriers()
     {
-        //if (_HasResetDynamicBarriersInThisFrame)
+        if (_HasResetDynamicBarriersInThisFrame)
         {
             return;
         }
 
         Singleton._PathUtil.ResetDynamicBarriers();
         System.Array.Copy(Singleton._PathUtil._Matrix, _Matrix, _Matrix.Length);
+
+        // set this character's bodies as roads. 
         for (int j = 0, max = _Character.BodyLength; j < max; j++)
         {
             var body = _Character.GetBody(j);
@@ -151,7 +187,59 @@ public class BotPathUtil : MonoBehaviour
                         _TempPoint2D.Y = y;
                         if (Singleton._PathUtil._PrevBarrierGrids.Contains(_TempPoint2D))
                         {
-                            _Matrix[x, y] = PathFindingUtil._GRID_ROAD;
+                            //_Matrix[x, y] = PathFindingUtil._GRID_ROAD;
+                        }
+                    }
+                }
+            }
+        }
+
+        // set heads whose total length is longer than this character as barrier. 
+        for (int i = 0, length = _PrevRoadGrids.Count; i < length; i++)
+        {
+            var grid = _PrevRoadGrids[i];
+            _Matrix[grid.X, grid.Y] = PathFindingUtil._GRID_ROAD;
+        }
+        _PrevRoadGrids.Clear();
+
+        var characters = GameManager.instance.GetCharacters(); 
+        BaseCharacter tempCharacter = null; 
+        int curEludeRadius = _MaxEludeRadius; 
+        for (int j = 0, max = characters.Count; j < max; j++)
+        {
+            tempCharacter = characters[j];
+            Assert.IsNotNull(tempCharacter);
+            if (tempCharacter == this._Character
+                || tempCharacter.TotalLength < this._Character.TotalLength
+                )
+            {
+                continue;
+            }
+            var body = tempCharacter.Head;
+            curEludeRadius = Mathf.Clamp((tempCharacter.TotalLength - this._Character.TotalLength) / 4, 0, _MaxEludeRadius);
+            var pos = body.transform.position;
+            // grid in this rectange cannot be reached. 
+            Rect rect = new Rect(pos.x, pos.y, curEludeRadius * 2, curEludeRadius * 2);
+            Point2D bottomLeft = Singleton._PathUtil.ConvertPoint2D(new Vector3(rect.x - rect.width / 2f, rect.y - rect.height / 2f));
+            Point2D topRight = Singleton._PathUtil.ConvertPoint2D(new Vector3(rect.x + rect.width / 2f, rect.y + rect.height / 2f));
+            int xMin = Mathf.Clamp(bottomLeft.X, 0, _XMaxBound);
+            int xMax = Mathf.Clamp(topRight.X, 0, _XMaxBound);
+            int yMin = Mathf.Clamp(bottomLeft.Y, 0, _YMaxBound);
+            int yMax = Mathf.Clamp(topRight.Y, 0, _YMaxBound);
+            //Debug.LogErrorFormat("xMin={0}, xMax={1}, yMin={2}, yMax={3}, origin={4}",
+            //xMin, xMax, yMin, yMax, pos);
+            for (int y = yMin; y <= yMax; y++)
+            {
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    if (_Matrix[x, y] == PathFindingUtil._GRID_ROAD)
+                    {
+                        _TempPoint2D.X = x;
+                        _TempPoint2D.Y = y;
+                        if (!_PrevRoadGrids.Contains(_TempPoint2D))
+                        {
+                            _Matrix[x, y] = PathFindingUtil._GRID_BARRIER; 
+                            _PrevRoadGrids.Add(_TempPoint2D);
                         }
                     }
                 }
@@ -195,7 +283,7 @@ public class BotPathUtil : MonoBehaviour
         //}
         if (_PathList.Count > 0)
         {
-            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < RunTimeData._MinMoveDelta)
+            if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < _Character.MoveMotion)
             {
                 _PathList.RemoveAt(0);
                 if (_PathList.Count > 0)
@@ -205,7 +293,9 @@ public class BotPathUtil : MonoBehaviour
             }
         }
 
-        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= RunTimeData._MinMoveDelta)
+        //Debug.LogErrorFormat("_TargetPos={0}, HeadPos={1}, MoveSpeed={2}",
+        //_TargetPos, _Character.Head.transform.position, _Character.MoveMotion);
+        if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) >= _Character.MoveMotion)
         {
             var motion = (_TargetPos - _Character.Head.transform.position).normalized
                 * _Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
@@ -213,11 +303,7 @@ public class BotPathUtil : MonoBehaviour
             bool rs = _Character.Move(motion);
             if (!rs)
             {
-                _IsInSteer = false;
-                if (_OnSteerFailed != null)
-                {
-                    _OnSteerFailed();
-                }
+                SteerFailed();
                 return;
             }
         }
@@ -227,7 +313,7 @@ public class BotPathUtil : MonoBehaviour
             //Debugger.LogError("has reach the final destination!!!");
             if (_PathList.Count == 0)
             {
-                _IsInSteer = false;
+                SteerFinish();
                 return;
             }
         }
@@ -237,7 +323,7 @@ public class BotPathUtil : MonoBehaviour
             int nearCount = 0;
             foreach (var item in _LastStepPoses)
             {
-                if (Vector3.Distance(item, _Character.Head.transform.position) < RunTimeData._MinMoveDelta)
+                if (Vector3.Distance(item, _Character.Head.transform.position) < _Character.MoveMotion / 2f)
                 {
                     nearCount += 1;
                 }
@@ -246,15 +332,11 @@ public class BotPathUtil : MonoBehaviour
             //< RunTimeData._MinMoveDelta * 2; 
             if (nearCount >= 2)
             {
-                Debug.LogErrorFormat("name={0}, peek={1}, dist={2}, delta={3}",
-                    _Character.Name, _LastStepPoses.Peek(),
-                    Vector3.Distance(_LastStepPoses.Peek(), _Character.Head.transform.position),
-                    RunTimeData._MinMoveDelta * 2);
-                _IsInSteer = false;
-                if (_OnSteerFailed != null)
-                {
-                    _OnSteerFailed();
-                }
+                //Debug.LogErrorFormat("nearCount name={0}, peek={1}, dist={2}, delta={3}",
+                //    _Character.Name, _LastStepPoses.Peek(),
+                //    Vector3.Distance(_LastStepPoses.Peek(), _Character.Head.transform.position),
+                //    _Character.MoveMotion);
+                SteerFailed();
                 return;
             }
         }
@@ -264,5 +346,24 @@ public class BotPathUtil : MonoBehaviour
             _LastStepPoses.Dequeue();
         }
         _LastStepPoses.Enqueue(_Character.Head.transform.position);
+    }
+
+    void SteerFailed()
+    {
+        SteerFinish();
+        if (_OnSteerFailed != null)
+        {
+            _OnSteerFailed();
+        }
+    }
+
+    void SteerFinish()
+    {
+        _LastStepPoses.Clear();
+        _IsInSteer = false;
+        if (_OnSteerFinished != null)
+        {
+            _OnSteerFinished();
+        }
     }
 }

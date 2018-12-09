@@ -23,24 +23,27 @@ public class Head : Body
         Gizmos.DrawWireSphere(_LastPos, Radius);
     }
 
+    Collider2D[] _CheckColliders = new Collider2D[16];
     public bool Move(Vector3 pos)
     {
         Vector3 targetPos = this.transform.position + pos;
-        var colliders = Physics2D.OverlapCircleAll(targetPos, Radius);
+        var collidersCount = Physics2D.OverlapCircleNonAlloc(targetPos, Radius, _CheckColliders);
         _LastPos = targetPos;
 
         bool pass = true;
         Body attackTarget = null;
-        if (colliders != null)
+        if (collidersCount > 0)
         {
-            for (int i = 0, length = colliders.Length; i < length; i++)
+            for (int i = 0, length = collidersCount; i < length; i++)
             {
-                var col = colliders[i];
-                var body = col.GetComponent<Body>();
-                if (body == null)
+                var col = _CheckColliders[i];
+                if (col.gameObject.layer == LayerMask.NameToLayer("Barrier"))
                 {
-                    body = col.GetComponentInParent<Head>();
+                    pass = false;
+                    break;
                 }
+
+                var body = col.GetComponent<Body>();
                 if (body != null)
                 {
                     if (body._Character == this._Character)
@@ -95,7 +98,7 @@ public class Head : Body
             this.transform.right = pos.normalized;
             this._CharacterName.transform.right = Vector3.right;
             _ChangeDirTimes = 0;
-            Debugger.LogBlue("pass pos=" + pos);
+            //Debugger.LogBlue("pass pos=" + pos);
         }
         else
         {

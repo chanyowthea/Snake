@@ -274,8 +274,14 @@ public class GameManager : MonoBehaviour
     public void RespawnFood(int foodId)
     {
         var food = _FoodPool.AllocObject();
-        food.SetData(GameManager.instance.GetFoodData(foodId));
         var pos = MapManager.instance.GetValidRandPosInCurMap();
+
+        // TODO cannot find a valid position. 
+        if (pos == Vector3.zero)
+        {
+            return;
+        }
+        food.SetData(GameManager.instance.GetFoodData(foodId));
         food.transform.position = pos;
         food.transform.SetParent(FoodRoot.transform);
     }

@@ -47,7 +47,7 @@ public class BaseCharacter : BaseMonoObject, IComparable
         }
     }
 
-    public uint CharacterUniqueID{ protected set; get;}
+    public uint CharacterUniqueID { protected set; get; }
 
     float _Scores;
     public float Scores
@@ -120,6 +120,14 @@ public class BaseCharacter : BaseMonoObject, IComparable
                 return null;
             }
             return PlayerInfo_._PlayerData;
+        }
+    }
+
+    public float MoveMotion
+    {
+        get
+        {
+            return MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
         }
     }
 
@@ -353,6 +361,11 @@ public class BaseCharacter : BaseMonoObject, IComparable
         var body = enemy.GetComponent<Body>();
         if (body != null)
         {
+            if (body._CurChasePoint == null)
+            {
+                //Debugger.LogErrorFormat("hashCode={0}, parentName={1}", body.GetHashCode(), body._Character == null ? "" : body._Character.Name);
+                return Vector3.zero;
+            }
             return body._CurChasePoint.position;
         }
         return enemy.transform.position;

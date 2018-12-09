@@ -46,6 +46,7 @@ public class MapManager : MonoBehaviour
         return new Vector3(x, y, 0);
     }
 
+    Collider2D[] _CheckColliders = new Collider2D[8];
     public Vector3 GetRandPosInRect(Rect rect, float headSize = ConstValue._BodyUnitSize)
     {
         // check valid
@@ -59,8 +60,8 @@ public class MapManager : MonoBehaviour
         {
             pos.x = RandomUtil.instance.Next(xMin,xMax);
             pos.y = RandomUtil.instance.Next(yMin, yMax);
-            var c = Physics2D.OverlapCircle(pos, ConstValue._BodyUnitSize, 0xffff ^ LayerMask.GetMask("Food"));
-            if (c == null)
+            var c = Physics2D.OverlapCircleNonAlloc(pos, ConstValue._BodyUnitSize, _CheckColliders, 0xffff ^ LayerMask.GetMask("Food"));
+            if (c == 0)
             {
                 findValidPos = true;
                 break;
@@ -87,8 +88,8 @@ public class MapManager : MonoBehaviour
             for (int i = 0; i < ConstValue._MaxLoopTime; i++)
             {
                 pos = GetRandPosInCurMap(ConstValue._DefaultBodyLength + 1, ConstValue._DefaultBodyLength + 1);
-                var c = Physics2D.OverlapCircle(pos, ConstValue._BodyUnitSize, 0xffff ^ LayerMask.GetMask("Food"));
-                if (c == null)
+                var c = Physics2D.OverlapCircleNonAlloc(pos, ConstValue._BodyUnitSize, _CheckColliders, 0xffff ^ LayerMask.GetMask("Food"));
+                if (c == 0)
                 {
                     findValidPos = true;
                     break;

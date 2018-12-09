@@ -53,7 +53,7 @@ class UIHUD : BaseUI
 
     void UpdateRankInfo()
     {
-        return;
+        //return;
 
         var cs = GameManager.instance.GetCharacters();
         CharacterUtil.InsertionSort<BaseCharacter>(cs, CharacterUtil.Compare); // .Sort((BaseCharacter cx, BaseCharacter cy) => cy.TotalLength - cx.TotalLength); 
