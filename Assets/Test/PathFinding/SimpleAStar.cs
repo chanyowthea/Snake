@@ -54,6 +54,7 @@ public class PathNode
 public class SimpleAStar
 {
     PathNode[,] _Matrix;
+    int _MaxLoop = 1000;
 
     public void Init(Point2D mapSize)
     {
@@ -97,8 +98,10 @@ public class SimpleAStar
         List<PathNode> closeSet = new List<PathNode>();
         PathNode curNode = start;
         openSet.Add(start);
-        while (openSet.Count > 0)
+        int curLoop = 0;
+        while (openSet.Count > 0 && curLoop < _MaxLoop)
         {
+            curLoop += 1;
             for (int i = 0, length = openSet.Count; i < length; i++)
             {
                 var node = openSet[i];
