@@ -146,10 +146,10 @@ public class GameManager : MonoBehaviour
 #endif
         RespawnCharacter(1);
         RespawnCharacter(2);
-        RespawnCharacter(3);
-        RespawnCharacter(1);
-        RespawnCharacter(2);
-        RespawnCharacter(3);
+        //RespawnCharacter(3);
+        //RespawnCharacter(1);
+        //RespawnCharacter(2);
+        //RespawnCharacter(3);
     }
 
     void PrepareBarriers()

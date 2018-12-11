@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class PathNode
 {
@@ -49,6 +50,27 @@ public class PathNode
     {
         return string.Format("_G={0}, _H={1}, F={2}, _X={3}, _Y={4}, _CanWalk={5}", _G, _H, F, _X, _Y, _CanWalk);
     }
+
+    public static bool operator ==(PathNode a, PathNode b)
+    {
+        // If both are null, or both are same instance, return true.
+        if (System.Object.ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        // If one is null, but not both, return false.
+        if (((object)a == null) || ((object)b == null))
+        {
+            return false;
+        }
+        return a.Equals(b);
+    }
+
+    public static bool operator !=(PathNode a, PathNode b)
+    {
+        return !(a == b);
+    }
 }
 
 public class SimpleAStar
@@ -56,20 +78,19 @@ public class SimpleAStar
     PathNode[,] _Matrix;
     int _MaxLoop = 1000;
 
-    public void Init(Point2D mapSize)
+    public void Init(PathNode[,] map)
     {
-        _Matrix = new PathNode[mapSize.X, mapSize.Y];
-        for (int i = 0, length = _Matrix.GetUpperBound(0) + 1; i < length; i++)
+        if (map == null)
         {
-            for (int j = 0, max = _Matrix.GetUpperBound(1) + 1; j < max; j++)
-            {
-                _Matrix[i, j] = new PathNode(i, j);
-            }
+            return;
         }
+
+        _Matrix = map;
     }
 
     public List<PathNode> FindPath(PathNode start, PathNode end)
     {
+        Assert.IsNotNull(_Matrix);
         if (start == null || end == null)
         {
             return null;
@@ -79,6 +100,8 @@ public class SimpleAStar
             for (int j = 0, max = _Matrix.GetUpperBound(1) + 1; j < max; j++)
             {
                 var node = _Matrix[i, j];
+                node._G = 0;
+                node._Parent = null;
                 node._H = Mathf.Abs(node._X - end._X) + Mathf.Abs(node._Y - end._Y);
                 if (node.Equals(start))
                 {
@@ -102,16 +125,18 @@ public class SimpleAStar
         while (openSet.Count > 0 && curLoop < _MaxLoop)
         {
             curLoop += 1;
+            curNode = openSet[0];
             for (int i = 0, length = openSet.Count; i < length; i++)
             {
                 var node = openSet[i];
-                if (node.F < curNode.F) // TODO
+                if (node.F < curNode.F)
+                //if (node.F <= curNode.F && node._H < curNode._H) // TODO
                 {
                     curNode = node;
                 }
             }
-            Debug.Log("curNode=" + curNode);
-            if (curNode.Equals(end)) // TODO Equals
+            //Debug.Log("curNode=" + curNode);
+            if (curNode == end) // TODO Equals
             {
                 break;
             }
@@ -120,7 +145,7 @@ public class SimpleAStar
             closeSet.Add(curNode);
 
             var neighs = GetNeighbours(curNode);
-            Debug.Log("neighs=" + neighs.Count);
+            //Debug.Log("neighs=" + neighs.Count);
             for (int i = 0, length = neighs.Count; i < length; i++)
             {
                 var node = neighs[i];
@@ -141,7 +166,7 @@ public class SimpleAStar
                 }
                 else
                 {
-                    if (node._G < cost)
+                    if (node._G > cost)
                     {
                         node._Parent = curNode;
                         node._G = cost;
@@ -151,8 +176,10 @@ public class SimpleAStar
         }
 
         List<PathNode> pathNodes = new List<PathNode>();
-        while (curNode._Parent != null)
+        curLoop = 0;
+        while (curNode._Parent != null && curLoop < _MaxLoop)
         {
+            curLoop += 1;
             pathNodes.Add(curNode);
             curNode = curNode._Parent;
         }
@@ -160,8 +187,10 @@ public class SimpleAStar
         return pathNodes;
     }
 
-    public float GetGoneDistance(PathNode start, PathNode end)
+    float GetGoneDistance(PathNode start, PathNode end)
     {
+        Assert.IsNotNull(start);
+        Assert.IsNotNull(end);
         int xGap = Mathf.Abs(start._X - end._X);
         int yGap = Mathf.Abs(start._Y - end._Y);
         if (xGap > yGap)
@@ -174,8 +203,9 @@ public class SimpleAStar
         }
     }
 
-    public List<PathNode> GetNeighbours(PathNode node)
+    List<PathNode> GetNeighbours(PathNode node)
     {
+        Assert.IsNotNull(node);
         List<PathNode> neighbours = new List<PathNode>();
         for (int i = -1; i <= 1; i++)
         {

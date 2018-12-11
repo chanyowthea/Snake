@@ -170,11 +170,11 @@ class NodeWander : TBTActionLeaf
         //Debugger.LogErrorFormat("dis={0}, delta={1}, Name={2}, _TargetPos={3}, NodeWander.HashCode={4}",
         //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta, thisData._Character.Name, _TargetPos, GetHashCode());
         //Debugger.LogGreen("curtime=" + _CurSteerTime);
-        if (_CurSteerTime > 0)
-        {
-            _CurSteerTime -= thisData._DeltaTime;
-        }
-        else
+        //if (_CurSteerTime > 0)
+        //{
+        //    _CurSteerTime -= thisData._DeltaTime;
+        //}
+        //else
         {
             UnityEngine.Profiling.Profiler.BeginSample("NodeWander.onExecute else");
             _CurSteerTime = _SteerGapTime;

@@ -92,7 +92,7 @@ public class BotPathUtil : MonoBehaviour
         GenPathGrid();
         _PathGrids.ForEach((r) =>
         {
-            Grid.DrawRect(r, Color.blue);
+            Grid.DrawRect(r, Color.cyan);
         });
 
         if (_Character.CharacterID != 2)
@@ -103,7 +103,7 @@ public class BotPathUtil : MonoBehaviour
         GenGrid();
         _Grids.ForEach((r) =>
         {
-            Grid.DrawRect(r, Color.green);
+            Grid.DrawRect(r, Color.grey);
         });
     }
 #endif
@@ -249,6 +249,7 @@ public class BotPathUtil : MonoBehaviour
 
     public List<Vector3> FindPath(Vector3 start, Vector3 end)
     {
+        UnityEngine.Profiling.Profiler.BeginSample("BotPathUtil.FindPath");
         ResetDynamicBarriers();
         // set the left bottom corner of map to zero point. 
         List<PathFinderNode> path = _PathFinder.FindPath(Singleton._PathUtil.ConvertPoint2D(start), Singleton._PathUtil.ConvertPoint2D(end)); //开始寻径
@@ -261,6 +262,7 @@ public class BotPathUtil : MonoBehaviour
         {
             result.Add(Singleton._PathUtil.ConvertVector3(path[i]));
         }
+        UnityEngine.Profiling.Profiler.EndSample();
         return result;
     }
 

@@ -267,7 +267,8 @@ public class Enemy : BaseCharacter
 
     public void SteerToTargetPos(Vector3 pos, Action onFinish, Action onFailed = null)
     {
-        _PathUtil.SteerToTargetPos(pos, onFinish, onFailed);
+        //_PathUtil.SteerToTargetPos(pos, onFinish, onFailed);
+        Singleton._PathUtil.AddToPathFindingQueue(() => _PathUtil.SteerToTargetPos(pos, onFinish, onFailed));
     }
 
     public bool IsSteering()

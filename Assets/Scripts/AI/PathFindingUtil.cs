@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Components.AStar;
 using Components.Struct;
+using System;
 
 public class PathFindingUtil : MonoBehaviour
 {
@@ -24,6 +25,7 @@ public class PathFindingUtil : MonoBehaviour
     public int _XMaxBound;
     public int _YMaxBound;
     bool _HasResetDynamicBarriersInThisFrame;
+    Queue<Action> _PathFindingActions = new Queue<Action>();
 
     void Start()
     {
@@ -39,11 +41,33 @@ public class PathFindingUtil : MonoBehaviour
 
         // reset the map every one minute. 
         //GameManager.instance.DelayCall(1, ResetDynamicBarriers, true);
+
+        //Singleton._DelayUtil.DelayCall(2, () => GC.Collect(), true);
     }
 
-    private void Update1()
+    public void AddToPathFindingQueue(Action action)
     {
-        _HasResetDynamicBarriersInThisFrame = false;
+        if (action == null)
+        {
+            return;
+        }
+        _PathFindingActions.Enqueue(action);
+    }
+
+    private void Update()
+    {
+        if (_HasResetDynamicBarriersInThisFrame)
+        {
+            //_HasResetDynamicBarriersInThisFrame = false;
+        }
+        if (_PathFindingActions.Count > 0)
+        {
+            var action = _PathFindingActions.Dequeue();
+            if (action != null)
+            {
+                action();
+            }
+        }
     }
 
     public void GenBaseMatrix()
