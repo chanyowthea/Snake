@@ -9,7 +9,7 @@ public class Enemy : BaseCharacter
     [SerializeField] PlayerCamera _PlayerCamera;
     private TBTAction _BevTree;
     private BotWorkingData _BevWorkingData;
-    BotPathUtil _PathUtil;
+    BotAStar _PathUtil;
     public override void SetData(PlayerInfo data, int initBodyLength)
     {
         _BevTree = BotFactory.GetBehaviourTree();
@@ -17,7 +17,7 @@ public class Enemy : BaseCharacter
         _BevWorkingData._Character = this;
         base.SetData(data, initBodyLength);
 
-        _PathUtil = this.gameObject.AddComponent<BotPathUtil>();
+        _PathUtil = this.gameObject.AddComponent<BotAStar>();
         _PathUtil.SetData(this);
         _PlayerCamera.SetData(_Head.transform);
     }
@@ -267,8 +267,8 @@ public class Enemy : BaseCharacter
 
     public void SteerToTargetPos(Vector3 pos, Action onFinish, Action onFailed = null)
     {
-        //_PathUtil.SteerToTargetPos(pos, onFinish, onFailed);
-        Singleton._PathUtil.AddToPathFindingQueue(() => _PathUtil.SteerToTargetPos(pos, onFinish, onFailed));
+        _PathUtil.SteerToTargetPos(pos, onFinish, onFailed);
+        //Singleton._PathUtil.AddToPathFindingQueue(() => _PathUtil.SteerToTargetPos(pos, onFinish, onFailed));
     }
 
     public bool IsSteering()

@@ -128,7 +128,7 @@ class NodeChase : TBTActionLeaf
                     bot.SteerToTargetPos(targetPos, null);
                 }
             }
-            //Debugger.LogErrorFormat("NodeChase ret={0},_CurSteerTime={1}, targetPos={2}", ret, _CurSteerTime, targetPos);
+            Debugger.LogFormat("NodeChase targetPos={0}", targetPos);
             UnityEngine.Profiling.Profiler.EndSample();
             return TBTRunningStatus.EXECUTING;
         }
@@ -190,11 +190,11 @@ class NodeWander : TBTActionLeaf
             UnityEngine.Profiling.Profiler.EndSample();
         }
 
-        if (_CurCheckTime > 0)
-        {
-            _CurCheckTime -= thisData._DeltaTime;
-        }
-        else
+        //if (_CurCheckTime > 0)
+        //{
+        //    _CurCheckTime -= thisData._DeltaTime;
+        //}
+        //else
         {
             UnityEngine.Profiling.Profiler.BeginSample("NodeWander.onExecute CheckEnemy");
             _CurCheckTime = _CheckGapTime;
@@ -205,6 +205,7 @@ class NodeWander : TBTActionLeaf
             }
             UnityEngine.Profiling.Profiler.EndSample();
         }
+        Debugger.LogFormat("check enemy class={0}, method={1}", LogColor.White, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         return TBTRunningStatus.EXECUTING;
     }
 

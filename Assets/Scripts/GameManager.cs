@@ -107,6 +107,7 @@ public class GameManager : MonoBehaviour
                 queue();
             }
         }
+        BotAStar.RunOneFrame();
     }
 
     //void FixedUpdate()

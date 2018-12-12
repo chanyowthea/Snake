@@ -1,5 +1,4 @@
-﻿using Components.Struct;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -88,13 +87,11 @@ public class SimpleAStar
         _Matrix = map;
     }
 
-    public List<PathNode> FindPath(PathNode start, PathNode end)
+    public List<PathNode> FindPath(Point2D s, Point2D e)
     {
         Assert.IsNotNull(_Matrix);
-        if (start == null || end == null)
-        {
-            return null;
-        }
+        PathNode start = null;
+        PathNode end = null;
         for (int i = 0, length = _Matrix.GetUpperBound(0) + 1; i < length; i++)
         {
             for (int j = 0, max = _Matrix.GetUpperBound(1) + 1; j < max; j++)
@@ -102,20 +99,24 @@ public class SimpleAStar
                 var node = _Matrix[i, j];
                 node._G = 0;
                 node._Parent = null;
-                node._H = Mathf.Abs(node._X - end._X) + Mathf.Abs(node._Y - end._Y);
-                if (node.Equals(start))
+                node._H = Mathf.Abs(node._X - e.X) + Mathf.Abs(node._Y - e.Y);
+                if (node._X == s.X && node._Y == s.Y)
                 {
                     start = node;
                 }
-                else if (node.Equals(end))
+                else if (node._X == e.X && node._Y == e.Y)
                 {
                     end = node;
                 }
             }
         }
 
-        Debug.Log("start=" + start);
-        Debug.Log("end=" + end);
+        if (start == null || end == null)
+        {
+            return null;
+        }
+        //Debug.Log("start=" + start);
+        //Debug.Log("end=" + end);
 
         List<PathNode> openSet = new List<PathNode>();
         List<PathNode> closeSet = new List<PathNode>();

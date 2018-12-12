@@ -48,8 +48,8 @@ public class AStarTest : MonoBehaviour
             {
                 _PathFindingQueue.Enqueue(() =>
                 {
-                    PathNode temp0 = new PathNode(start._X, start._Y);
-                    PathNode temp1 = new PathNode(end._X, end._Y);
+                    Point2D temp0 = new Point2D(start._X, start._Y);
+                    Point2D temp1 = new Point2D(end._X, end._Y);
                     var nodes = FindPath(temp0, temp1);
                     ReDrawGrids(nodes);
                 });
@@ -99,7 +99,7 @@ public class AStarTest : MonoBehaviour
         }
     }
 
-    List<PathNode> FindPath(PathNode start, PathNode end)
+    List<PathNode> FindPath(Point2D start, Point2D end)
     {
         return _PathFinder.FindPath(start, end);
     }
@@ -125,7 +125,7 @@ public class AStarTest : MonoBehaviour
         _PathFinder.Init(_Matrix);
         _StartNode = new PathNode(0, 5);
         _EndNode = new PathNode(10, 31);
-        var nodes = _PathFinder.FindPath(_StartNode, _EndNode);
+        var nodes = _PathFinder.FindPath(ToPoint2D(_StartNode), ToPoint2D(_EndNode));
 
         // for test. draw grids. 
         for (int i = 0, length = _Matrix.GetUpperBound(0) + 1; i < length; i++)
@@ -187,5 +187,10 @@ public class AStarTest : MonoBehaviour
         rect.x = _GridSize * (1 - 0.8f) / 2f + _EndNode._X * _GridSize;
         rect.y = _GridSize * (1 - 0.8f) / 2f + _EndNode._Y * _GridSize;
         Grid.DrawRect(rect, Color.red);
+    }
+
+    Point2D ToPoint2D(PathNode node)
+    {
+        return new Point2D(node._X, node._Y);
     }
 }
