@@ -5,48 +5,60 @@ using UnityEngine;
 
 public class EfficiencyTest : MonoBehaviour
 {
-    // foreach, 拼接字符串
+    // foreach
+    // 拼接字符串
     void Start()
     {
-        float time = Time.realtimeSinceStartup;
-        for (int i = 0; i < 10000; i++)
+        List<int> list = new List<int> { 5, 4, 3, 7 };
+        for (int i = list.Count / 2 - 1; i >= 0; i--)
         {
-            Run();
+            ConstructMaxHeap(list, i, list.Count);
         }
-        Debug.Log(Time.realtimeSinceStartup - time);
-        UnityEngine.Profiling.Profiler.BeginSample("a=Run");
-        time = Time.realtimeSinceStartup;
-        for (int i = 0; i < 10000; i++)
+        Sort(list);
+        string s = "";
+        for (int i = 0, length = list.Count; i < length; i++)
         {
-            Action a = Run;
-            if (a != null)
+            s += list[i] + ", ";
+        }
+        Debug.Log(s);
+    }
+    
+    // 时间复杂度和空间复杂度
+    void ConstructMaxHeap(List<int> list, int parentIndex, int constructLength)
+    {
+        int parentValue = list[parentIndex];
+        for (int childIndex = parentIndex * 2 + 1; childIndex < constructLength; childIndex = childIndex * 2 + 1)
+        {
+            if (childIndex + 1 > constructLength && list[childIndex] < list[childIndex + 1])
             {
-                a();
+                childIndex++;
+            }
+            if (list[childIndex] > parentValue)
+            {
+                list[parentIndex] = list[childIndex];
+                parentIndex = childIndex;
+            }
+            else
+            {
+                break;
             }
         }
-        UnityEngine.Profiling.Profiler.EndSample();
-        Debug.Log(Time.realtimeSinceStartup - time);
-        UnityEngine.Profiling.Profiler.BeginSample("a=()=>Run");
-        time = Time.realtimeSinceStartup;
-        for (int i = 0; i < 10000; i++)
+        list[parentIndex] = parentValue;
+    }
+
+    void Sort(List<int> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
         {
-            Action a = () => Run();
-            if (a != null)
-            {
-                a();
-            }
+            Swap(list, 0, i);
+            ConstructMaxHeap(list, 0, i);
         }
-        UnityEngine.Profiling.Profiler.EndSample();
-        Debug.Log(Time.realtimeSinceStartup - time);
     }
 
-    void Run()
+    void Swap(List<int> list, int index0, int index1)
     {
-
-    }
-
-    void Update()
-    {
-
+        var temp = list[index0];
+        list[index0] = list[index1];
+        list[index1] = temp;
     }
 }

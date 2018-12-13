@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TsiU;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class BotFactory : MonoBehaviour
 {
@@ -43,38 +44,30 @@ class CON_HasReachedTarget : TBTPreconditionLeaf
 
 class NodeChase : TBTActionLeaf
 {
-    //float _SteerGapTime = 3;
-    //float _CurSteerTime;
+    float _SteerGapTime = 0.2f;
+    float _CurSteerTime;
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         UnityEngine.Profiling.Profiler.BeginSample("NodeChase.onEvaluate");
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        //if (thisData._Character.GetTargetEnemy() == null)
-        //{
-        //    var player = (thisData._Character as Enemy);
-        //    if (player != null)
-        //    {
-        //        player.CheckEnemy();
-        //    }
-        //}
         UnityEngine.Profiling.Profiler.EndSample();
-        return thisData._Character.GetTargetEnemy() != null;
         //return false;
+        return thisData._Character.GetTargetEnemy() != null;
     }
 
     protected override void onEnter(TBTWorkingData wData)
     {
         UnityEngine.Profiling.Profiler.BeginSample("NodeChase.onEnter");
         base.onEnter(wData);
-        Debugger.LogFormat("class={0}, method={1}", LogColor.Blue, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        //Debugger.LogFormat("class={0}, method={1}", LogColor.White, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         UnityEngine.Profiling.Profiler.EndSample();
     }
 
     protected override void onExit(TBTWorkingData wData, int runningStatus)
     {
         UnityEngine.Profiling.Profiler.BeginSample("NodeChase.onExit");
-        //_CurSteerTime = 0;
-        base.onExit(wData, runningStatus); 
+        _CurSteerTime = 0;
+        base.onExit(wData, runningStatus);
         UnityEngine.Profiling.Profiler.EndSample();
     }
 
@@ -88,7 +81,7 @@ class NodeChase : TBTActionLeaf
         UnityEngine.Profiling.Profiler.EndSample();
         if (distToTarget < thisData._Character.MoveMotion)
         {
-            //_CurSteerTime = 0;
+            _CurSteerTime = 0;
             thisData._Character.SetTargetEnemy(null);
             return TBTRunningStatus.FINISHED;
         }
@@ -106,29 +99,24 @@ class NodeChase : TBTActionLeaf
                 thisData._Character.SetTargetEnemy(null);
                 return TBTRunningStatus.FINISHED;
             }
-            //float movingStep = thisData._Character.MoveSpeed;
-            //if (movingStep > distToTarget)
-            //{
-            //    _CurSteerTime = 0;
-            //    movingStep = distToTarget;
-            //    ret = TBTRunningStatus.FINISHED;
-            //}
-
-            //if (_CurSteerTime > 0)
-            //{
-            //    _CurSteerTime -= thisData._DeltaTime;
-            //}
-            //else
+            if (_CurSteerTime > 0)
             {
-                //_CurSteerTime = _SteerGapTime;
+                _CurSteerTime -= thisData._DeltaTime;
+            }
+            else
+            {
+                _CurSteerTime = _SteerGapTime;
                 Enemy bot = thisData._Character as Enemy;
                 Debug.DrawLine(currentPos, targetPos, Color.green, 1);
                 if (bot != null)
                 {
-                    bot.SteerToTargetPos(targetPos, null);
+                    bot.SteerToTargetPos(targetPos, () =>
+                    {
+                        thisData._Character.SetTargetEnemy(null);
+                    }, null);
                 }
             }
-            Debugger.LogFormat("NodeChase targetPos={0}", targetPos);
+            //Debugger.LogFormat("NodeChase targetPos={0}", targetPos);
             UnityEngine.Profiling.Profiler.EndSample();
             return TBTRunningStatus.EXECUTING;
         }
@@ -138,29 +126,38 @@ class NodeChase : TBTActionLeaf
 class NodeWander : TBTActionLeaf
 {
     Vector3 _TargetPos;
-    float _SteerGapTime = 3;
+    bool _InWander;
+    float _SteerGapTime = 0.5f;
     float _CurSteerTime;
-    float _CheckGapTime = 1;
+    float _CheckGapTime = 1f;
     float _CurCheckTime;
+    Queue<Vector3> _LastStepPoses = new Queue<Vector3>();
+    const int _MaxRecordStepCount = 5;
 
     protected override bool onEvaluate(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
         //thisData._Character.SetTargetEnemy(null);
-        return thisData._Character.GetTargetEnemy() == null;
         //return true;
+        return thisData._Character.GetTargetEnemy() == null;
     }
 
     protected override void onEnter(TBTWorkingData wData)
     {
         BotWorkingData thisData = wData.As<BotWorkingData>();
-        Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
-        GenerateTargetPos(thisData._Character.Head.transform.position, wData);
+        //Debugger.LogFormat("class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+        //GenerateTargetPos(thisData._Character.Head.transform.position, wData);
+        _InWander = false;
+        _CurSteerTime = _SteerGapTime;
+        _CurCheckTime = _CheckGapTime;
     }
 
     protected override void onExit(TBTWorkingData wData, int runningStatus)
     {
-        _CurSteerTime = 0;
+        _CurCheckTime = _CheckGapTime;
+        _CurSteerTime = _SteerGapTime;
+        _InWander = false;
+        _LastStepPoses.Clear();
         base.onExit(wData, runningStatus);
     }
 
@@ -170,31 +167,26 @@ class NodeWander : TBTActionLeaf
         //Debugger.LogErrorFormat("dis={0}, delta={1}, Name={2}, _TargetPos={3}, NodeWander.HashCode={4}",
         //Vector3.Distance(_TargetPos, thisData._Character.Head.transform.position), ConstValue._MinMoveDelta, thisData._Character.Name, _TargetPos, GetHashCode());
         //Debugger.LogGreen("curtime=" + _CurSteerTime);
-        //if (_CurSteerTime > 0)
-        //{
-        //    _CurSteerTime -= thisData._DeltaTime;
-        //}
-        //else
+        Vector3 targetPos = _TargetPos;
+        Vector3 currentPos = thisData._Character.Head.transform.position;
+        float distToTarget = Vector3.Distance(targetPos, currentPos);
+        if (distToTarget < thisData._Character.MoveMotion)
         {
-            UnityEngine.Profiling.Profiler.BeginSample("NodeWander.onExecute else");
-            _CurSteerTime = _SteerGapTime;
-            Enemy bot = thisData._Character as Enemy;
-            if (bot != null)
+            if (_InWander)
             {
-                bot.SteerToTargetPos(_TargetPos, () =>
-                {
-                    _CurSteerTime = 0;
-                    GenerateTargetPos(thisData._Character.Head.transform.position, wData);
-                });
+                //Debugger.LogFormat("reach dest class={0}, method={1}", LogColor.Blue, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+                _CurSteerTime = _SteerGapTime;
+                _InWander = false;
+                _LastStepPoses.Clear();
             }
-            UnityEngine.Profiling.Profiler.EndSample();
         }
 
-        //if (_CurCheckTime > 0)
-        //{
-        //    _CurCheckTime -= thisData._DeltaTime;
-        //}
-        //else
+        // check enemy operation has a cool down time. 
+        if (_CurCheckTime > 0)
+        {
+            _CurCheckTime -= thisData._DeltaTime;
+        }
+        else
         {
             UnityEngine.Profiling.Profiler.BeginSample("NodeWander.onExecute CheckEnemy");
             _CurCheckTime = _CheckGapTime;
@@ -204,8 +196,74 @@ class NodeWander : TBTActionLeaf
                 player.CheckEnemy();
             }
             UnityEngine.Profiling.Profiler.EndSample();
+            //Debugger.LogFormat("check enemy class={0}, method={1}", LogColor.Brown, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
         }
-        Debugger.LogFormat("check enemy class={0}, method={1}", LogColor.White, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+
+        // wait for next wander command
+        if (_CurSteerTime > 0)
+        {
+            _CurSteerTime -= thisData._DeltaTime;
+        }
+        else
+        {
+            if (!_InWander)
+            {
+                //Debugger.LogFormat("generate pos class={0}, method={1}", LogColor.Cyan, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+                GenerateTargetPos(thisData._Character.Head.transform.position, wData);
+                _InWander = true;
+            }
+        }
+
+        if (_InWander)
+        {
+            //Debugger.LogFormat("steer to class={0}, method={1}", LogColor.Green, false, LogUtil.GetCurClassName(), LogUtil.GetCurMethodName());
+            UnityEngine.Profiling.Profiler.BeginSample("NodeWander.onExecute InWander");
+            var motion = (_TargetPos - thisData._Character.Head.transform.position).normalized
+                * thisData._Character.MoveSpeed * Singleton._DelayUtil.Timer.DeltaTime;
+            bool rs = thisData._Character.Move(motion);
+            if (!rs)
+            {
+                if (_InWander)
+                {
+                    _CurSteerTime = _SteerGapTime;
+                    _InWander = false;
+                    _LastStepPoses.Clear();
+                }
+            }
+
+            if (_LastStepPoses.Count == _MaxRecordStepCount)
+            {
+                int nearCount = 0;
+                foreach (var item in _LastStepPoses)
+                {
+                    if (Vector3.Distance(item, thisData._Character.Head.transform.position) < thisData._Character.MoveMotion / 2f)
+                    {
+                        nearCount += 1;
+                    }
+                }
+                if (nearCount >= 2)
+                {
+                    //Debug.LogErrorFormat("nearCount name={0}, peek={1}, dist={2}, delta={3}",
+                    //    _Character.Name, _LastStepPoses.Peek(),
+                    //    Vector3.Distance(_LastStepPoses.Peek(), _Character.Head.transform.position),
+                    //    _Character.MoveMotion);
+                    if (_InWander)
+                    {
+                        _CurSteerTime = _SteerGapTime;
+                        _InWander = false;
+                        _LastStepPoses.Clear();
+                    }
+                }
+            }
+            Assert.IsTrue(_LastStepPoses.Count <= _MaxRecordStepCount);
+            if (_LastStepPoses.Count == _MaxRecordStepCount)
+            {
+                _LastStepPoses.Dequeue();
+            }
+            _LastStepPoses.Enqueue(thisData._Character.Head.transform.position);
+
+            UnityEngine.Profiling.Profiler.EndSample();
+        }
         return TBTRunningStatus.EXECUTING;
     }
 

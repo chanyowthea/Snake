@@ -57,6 +57,7 @@ public class Head : Body
                             attackTarget = body;
                         }
                         // strong is priority
+                        // if there is strong body in the road, cannot eat any food in the road. 
                         else if ((body.IsStrong && body._Character != null) && !attackTarget.IsStrong)
                         {
                             attackTarget = body;
@@ -112,7 +113,7 @@ public class Head : Body
             if (_OriginMotion1 == Vector3.zero)
             {
                 _OriginMotion1 = pos;
-                Debugger.LogGreen(string.Format("start _OriginMotion1=x{0}, y{1}", _OriginMotion1.x, _OriginMotion1.y));
+                //Debugger.LogGreen(string.Format("start _OriginMotion1=x{0}, y{1}", _OriginMotion1.x, _OriginMotion1.y));
             }
             if (_OriginMotion1.x == 0 || _OriginMotion1.y == 0)
             {
@@ -137,7 +138,7 @@ public class Head : Body
                         dir = _TurnRight ? new Vector3(-1, 0, 0) : new Vector3(1, 0, 0);
                     }
                     _Motion1 = _OriginMotion1.magnitude * dir.normalized;
-                    Debugger.LogGreen("Motion1=" + _Motion1);
+                    //Debugger.LogGreen("Motion1=" + _Motion1);
                     pass = Move(_Motion1);
                 }
                 else if (_ChangeDirTimes == 2)
@@ -161,7 +162,7 @@ public class Head : Body
                         dir = _TurnRight ? new Vector3(-1, 0, 0) : new Vector3(1, 0, 0);
                     }
                     _Motion1 = _OriginMotion1.magnitude * dir.normalized;
-                    Debugger.LogGreen("Motion1=" + _Motion1);
+                    //Debugger.LogGreen("Motion1=" + _Motion1);
                     pass = Move(_Motion1);
                 }
             }
@@ -170,7 +171,7 @@ public class Head : Body
                 // strategy 1
                 if (_ChangeDirTimes == 1)
                 {
-                    Debugger.LogGreen(string.Format("else times=1 _OriginMotion1=x{0}, y{1}", _OriginMotion1.x, _OriginMotion1.y));
+                    //Debugger.LogGreen(string.Format("else times=1 _OriginMotion1=x{0}, y{1}", _OriginMotion1.x, _OriginMotion1.y));
                     Vector3 dir = Vector3.zero;
                     int rs = (int)(Mathf.Abs(_OriginMotion1.x) - Mathf.Abs(_OriginMotion1.y));
                     if (rs > 0)
@@ -196,7 +197,7 @@ public class Head : Body
                         }
                     }
                     _Motion1 = _OriginMotion1.magnitude * dir.normalized;
-                    Debugger.LogGreen("Motion1=" + _Motion1);
+                    //Debugger.LogGreen("Motion1=" + _Motion1);
                     //Debugger.LogError("collider time=" + _LastCollidedTime);
                     pass = Move(_Motion1);
                 }
@@ -227,7 +228,7 @@ public class Head : Body
                         }
                     }
                     _Motion1 = _OriginMotion1.magnitude * dir.normalized;
-                    Debugger.LogGreen("Motion1 2=" + _Motion1);
+                    //Debugger.LogGreen("Motion1 2=" + _Motion1);
                     //Debugger.LogError("collider time=" + _LastCollidedTime);
                     pass = Move(_Motion1);
                 }
@@ -280,7 +281,7 @@ public class Head : Body
         }
         if (body.IsStrong && body._Character != null)
         {
-            return false;
+            return true;
         }
         if (body is Head)
         {

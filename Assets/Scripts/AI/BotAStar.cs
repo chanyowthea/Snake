@@ -122,21 +122,9 @@ public class BotAStar : MonoBehaviour
 
     public void SteerToTargetPos(Vector3 pos, Action onFinish, Action onFailed = null)
     {
-        //var enumerator = _SteerQueue.GetEnumerator();
-        //while (enumerator.MoveNext())
-        //{
-        //    var item = enumerator.Current;
-        //    Assert.IsNotNull(item.Key);
-        //    // if contains this util already, add another action. 
-        //    if (item.Key == this)
-        //    {
-        //        _SteerQueue.Add(new KeyValuePair<BotAStar, Action>(this, () => OnStartSteer(pos, onFinish, onFailed)));
-        //        return;
-        //    }
-        //}
-
+        _SteerQueue.Enqueue(() => OnStartSteer(pos, onFinish, onFailed)); 
         // if do not contains this util, run immediately. 
-        OnStartSteer(pos, onFinish, onFailed);
+        //OnStartSteer(pos, onFinish, onFailed);
     }
 
     void OnStartSteer(Vector3 pos, Action onFinish, Action onFailed = null)
@@ -149,11 +137,11 @@ public class BotAStar : MonoBehaviour
         {
             //_StartSteerTime = Singleton._DelayUtil.GameTime;
             _IsInSteer = true;
-            _PathList.Reverse();
-            if (_PathList.Count > 0)
-            {
-                _PathList.RemoveAt(0);
-            }
+            //_PathList.Reverse();
+            //if (_PathList.Count > 0)
+            //{
+            //    _PathList.RemoveAt(0);
+            //}
             _PathList.Add(_FinalTargetPos);
             if (_PathList.Count > 0)
             {
@@ -189,14 +177,12 @@ public class BotAStar : MonoBehaviour
 
     Queue<Vector3> _LastStepPoses = new Queue<Vector3>();
     const int _MaxRecordStepCount = 5;
-    Vector3 _LastFrameHeadPos;
     public void Update()
     {
         if (!_IsInSteer || _PathList == null)
         {
             return;
         }
-        _LastFrameHeadPos = _Character.Head.transform.position;
         if (_PathList.Count > 0)
         {
             if (Vector3.Distance(_TargetPos, _Character.Head.transform.position) < _Character.MoveMotion)
@@ -273,18 +259,7 @@ public class BotAStar : MonoBehaviour
 
     void SteerFinish()
     {
-        var enumerator = _SteerQueue.GetEnumerator();
-        while (enumerator.MoveNext())
-        {
-            var item = enumerator.Current;
-            Assert.IsNotNull(item.Key);
-            // if contains this util already, add another action. 
-            if (item.Key == this)
-            {
-                _SteerQueue.Remove(item);
-            }
-        }
-
+        //_SteerQueue.Clear();
         _LastStepPoses.Clear();
         _IsInSteer = false;
         if (_OnSteerFinished != null)
@@ -313,16 +288,14 @@ public class BotAStar : MonoBehaviour
         return pos;
     }
 
-    static List<KeyValuePair<BotAStar, Action>> _SteerQueue = new List<KeyValuePair<BotAStar, Action>>();
+    static Queue<Action> _SteerQueue = new Queue<Action>();
     public static void RunOneFrame()
     {
         if (_SteerQueue.Count > 0)
         {
-            var item = _SteerQueue[0];
-            Assert.IsNotNull(item.Key);
-            Assert.IsNotNull(item.Value);
-            _SteerQueue.RemoveAt(0);
-            item.Value();
+            var item = _SteerQueue.Dequeue();
+            Assert.IsNotNull(item);
+            item();
         }
     }
 }
